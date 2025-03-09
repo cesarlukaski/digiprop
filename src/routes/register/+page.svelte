@@ -52,13 +52,22 @@
 
         try {
             // Register the user
-            const result = await api.register(fullName, email, password, userType);
-            
+            const result = await api.register(
+                email,
+                fullName,
+                password,
+                userType,
+            );
+
             // Set the authentication
             authStore.setAuth(result.user, result.token);
-            
-            // Redirect to expertise page
-            goto("/register/expertise");
+
+            // Redirect to expertise page for partners, or properties for clients
+            if (userType === "partner") {
+                goto("/register/expertise");
+            } else {
+                goto("/properties");
+            }
         } catch (err: unknown) {
             error =
                 err instanceof Error
@@ -75,177 +84,179 @@
 </script>
 
 <div class="register-container">
-    <div class="register-form">
-        <div class="logo">
-            <img src="/digiprop-logo.svg" alt="DigiProp Logo" />
-            <span>Digiprop</span>
-        </div>
-
-        <div class="user-type-toggle">
-            <button
-                class="toggle-btn"
-                class:active={userType === "client"}
-                on:click={() => setUserType("client")}
-            >
-                Register as Client
-            </button>
-            <button
-                class="toggle-btn"
-                class:active={userType === "partner"}
-                on:click={() => setUserType("partner")}
-            >
-                Register as Partner
-            </button>
-        </div>
-
-        <h1>Create your account</h1>
-
-        {#if error}
-            <div class="error-message">
-                {error}
-            </div>
-        {/if}
-
-        <form on:submit|preventDefault={handleRegister}>
-            <div class="form-group">
-                <input
-                    id="fullName"
-                    type="text"
-                    placeholder={userType === "client"
-                        ? "Organization name"
-                        : "Full name"}
-                    bind:value={fullName}
-                    required
-                />
+    <div class="register-card">
+        <div class="register-form">
+            <div class="logo">
+                <img src="/digiprop-logo.svg" alt="DigiProp Logo" />
+                <span>Digiprop</span>
             </div>
 
-            <div class="form-group">
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    bind:value={email}
-                    required
-                />
+            <div class="user-type-toggle">
+                <button
+                    class="toggle-btn"
+                    class:active={userType === "client"}
+                    on:click={() => setUserType("client")}
+                >
+                    Register as Client
+                </button>
+                <button
+                    class="toggle-btn"
+                    class:active={userType === "partner"}
+                    on:click={() => setUserType("partner")}
+                >
+                    Register as Partner
+                </button>
             </div>
 
-            <div class="form-group">
-                <div class="password-input-container">
+            <h1>Create your account</h1>
+
+            {#if error}
+                <div class="error-message">
+                    {error}
+                </div>
+            {/if}
+
+            <form on:submit|preventDefault={handleRegister}>
+                <div class="form-group">
                     <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Password"
-                        bind:value={password}
+                        id="fullName"
+                        type="text"
+                        placeholder={userType === "client"
+                            ? "Organization name"
+                            : "Full name"}
+                        bind:value={fullName}
                         required
                     />
-                    <button
-                        type="button"
-                        class="password-toggle"
-                        on:click={togglePasswordVisibility}
-                    >
-                        {#if showPassword}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                                ></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
-                        {:else}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                ></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        {/if}
-                    </button>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <div class="password-input-container">
+                <div class="form-group">
                     <input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Repeat password"
-                        bind:value={confirmPassword}
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        bind:value={email}
                         required
                     />
-                    <button
-                        type="button"
-                        class="password-toggle"
-                        on:click={toggleConfirmPasswordVisibility}
-                    >
-                        {#if showConfirmPassword}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
-                                ></path>
-                                <line x1="1" y1="1" x2="23" y2="23"></line>
-                            </svg>
-                        {:else}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path
-                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                ></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        {/if}
-                    </button>
                 </div>
+
+                <div class="form-group">
+                    <div class="password-input-container">
+                        <input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Password"
+                            bind:value={password}
+                            required
+                        />
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            on:click={togglePasswordVisibility}
+                        >
+                            {#if showPassword}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                    ></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            {:else}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                    ></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            {/if}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="password-input-container">
+                        <input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Repeat password"
+                            bind:value={confirmPassword}
+                            required
+                        />
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            on:click={toggleConfirmPasswordVisibility}
+                        >
+                            {#if showConfirmPassword}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                    ></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            {:else}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                    ></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            {/if}
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="register-btn" disabled={loading}>
+                    {#if loading}
+                        <span class="loading-icon">⟳</span>
+                    {/if}
+                    Register
+                </button>
+            </form>
+
+            <div class="login-link">
+                <span>I have an Account?</span>
+                <button class="text-btn" on:click={goToLogin}>Login</button>
             </div>
-
-            <button type="submit" class="register-btn" disabled={loading}>
-                {#if loading}
-                    <span class="loading-icon">⟳</span>
-                {/if}
-                Register
-            </button>
-        </form>
-
-        <div class="login-link">
-            <span>I have an Account?</span>
-            <button class="text-btn" on:click={goToLogin}>Login</button>
         </div>
     </div>
 </div>
@@ -258,15 +269,20 @@
         min-height: 100vh;
         padding: 20px;
         background-color: #f8f9fa;
+        width: 100%;
+    }
+
+    .register-card {
+        max-width: 500px;
+        width: 100%;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
     }
 
     .register-form {
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        padding: 32px;
-        width: 100%;
-        max-width: 400px;
+        padding: 24px;
     }
 
     .logo {

@@ -7,6 +7,12 @@
     // Check if user is authenticated
     onMount(() => {
         authStore.init();
+        console.log("Layout mounted, auth status:", {
+            hasToken: !!authStore.token,
+            hasUser: !!authStore.user,
+            currentPath: $page.url.pathname,
+            tokenInStorage: !!localStorage.getItem("digiprop_token"),
+        });
     });
 
     // Handle logout
@@ -30,8 +36,16 @@
     ];
 
     $: user = authStore.user;
-    $: isAuthenticated = !!user;
+    $: tokenExists =
+        typeof localStorage !== "undefined"
+            ? !!localStorage.getItem("digiprop_token")
+            : false;
     $: currentPath = $page.url.pathname;
+    $: isPublicPage =
+        currentPath === "/login" ||
+        currentPath === "/register" ||
+        currentPath.startsWith("/register/");
+    $: showSidebar = tokenExists && !isPublicPage;
 
     // Function to render the right icon based on name
     function getIcon(iconName: string) {
@@ -81,64 +95,105 @@
 </script>
 
 <div class="app-container">
-    <aside class="sidebar">
-        <div class="logo">
-            <img src="/digiprop-logo.svg" alt="DigiProp Logo" />
-            <span>Digiprop</span>
-        </div>
-
-        <nav>
-            <ul>
-                {#each navItems as item}
-                    <li class:active={currentPath.startsWith(item.path)}>
-                        <a href={item.path}>
-                            <span class="icon">{@html getIcon(item.icon)}</span>
-                            <span class="nav-text">{item.label}</span>
-                        </a>
-                    </li>
-                {/each}
-            </ul>
-        </nav>
-
-        <div class="user-menu">
-            <div class="user-actions">
-                <!-- Chat Icon -->
-                <a href="/chat" class="action-icon" title="Chat">
-                    <!-- Directly embed SVG for chat icon to ensure it renders -->
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92176 4.44061 8.37485 5.27072 7.03255C6.10083 5.69025 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99476 18.5291 5.47086C20.0052 6.94696 20.885 8.91566 21 11V11.5Z"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </a>
+    {#if showSidebar}
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="/digiprop-logo.svg" alt="DigiProp Logo" />
+                <span>Digiprop</span>
             </div>
 
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="user-info" on:click={() => goto("/profile")}>
-                <div class="avatar">
-                    <!-- Always show placeholder for consistency, since avatar images may be missing -->
-                    <div class="avatar-placeholder">
-                        {user?.name?.charAt(0) || "A"}
+            <nav>
+                <ul>
+                    {#each navItems as item}
+                        <li class:active={currentPath.startsWith(item.path)}>
+                            <a href={item.path}>
+                                <span class="icon"
+                                    >{@html getIcon(item.icon)}</span
+                                >
+                                <span class="nav-text">{item.label}</span>
+                            </a>
+                        </li>
+                    {/each}
+                </ul>
+            </nav>
+
+            <div class="user-menu">
+                <div class="user-actions">
+                    <!-- Chat Icon -->
+                    <a href="/chat" class="action-icon" title="Chat">
+                        <!-- Directly embed SVG for chat icon to ensure it renders -->
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92176 4.44061 8.37485 5.27072 7.03255C6.10083 5.69025 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99476 18.5291 5.47086C20.0052 6.94696 20.885 8.91566 21 11V11.5Z"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </a>
+
+                    <!-- Logout button -->
+                    <button
+                        class="action-icon"
+                        title="Logout"
+                        on:click={handleLogout}
+                    >
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M16 17L21 12L16 7"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M21 12H9"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div class="user-info" on:click={() => goto("/profile")}>
+                    <div class="avatar">
+                        <!-- Always show placeholder for consistency, since avatar images may be missing -->
+                        <div class="avatar-placeholder">
+                            {user?.name?.charAt(0) || "A"}
+                        </div>
+                    </div>
+                    <div class="user-details">
+                        <p class="user-name">{user?.name || "Aktons"}</p>
                     </div>
                 </div>
-                <div class="user-details">
-                    <p class="user-name">Aktons</p>
-                </div>
             </div>
-        </div>
-    </aside>
-    <div class="content with-sidebar">
+        </aside>
+    {/if}
+    <div class="content {showSidebar ? 'with-sidebar' : 'full-width'}">
         <slot />
     </div>
 </div>
@@ -240,6 +295,7 @@
         display: flex;
         justify-content: flex-end;
         margin-bottom: 10px;
+        gap: 8px;
     }
 
     .action-icon {
@@ -327,6 +383,11 @@
 
     .content.with-sidebar {
         margin-left: 250px;
+    }
+
+    .content.full-width {
+        margin-left: 0;
+        width: 100%;
     }
 
     @media (max-width: 768px) {

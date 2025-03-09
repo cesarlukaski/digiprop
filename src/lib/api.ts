@@ -141,31 +141,54 @@ export const authStore = {
     // Initialize from localStorage
     init() {
         try {
-            const storedUser = localStorage.getItem('digiprop_user');
             const storedToken = localStorage.getItem('digiprop_token');
 
+            // Only proceed if we have a token
             if (storedToken) {
-                // If we have a token but no user data, create a default user
-                if (!storedUser) {
-                    const defaultUser: User = {
-                        id: '1',
-                        email: 'user@example.com',
-                        name: 'Aktons',
-                        userType: 'client'
-                    };
+                this.token = storedToken;
 
-                    this.user = defaultUser;
-                    localStorage.setItem('digiprop_user', JSON.stringify(defaultUser));
+                // Try to get user data from localStorage
+                const storedUser = localStorage.getItem('digiprop_user');
+
+                if (storedUser) {
+                    try {
+                        // Parse the user data
+                        this.user = JSON.parse(storedUser);
+                    } catch (e) {
+                        console.error("Failed to parse user data, creating default");
+                        // If parsing fails, create a default user
+                        this.createDefaultUser();
+                    }
                 } else {
-                    this.user = JSON.parse(storedUser);
+                    // No user data but we have a token - create default user
+                    this.createDefaultUser();
                 }
 
-                this.token = storedToken;
+                console.log("Auth initialized:", {
+                    hasToken: !!this.token,
+                    hasUser: !!this.user
+                });
+            } else {
+                // No token means not authenticated
+                this.clearAuth();
             }
         } catch (error) {
             console.error('Failed to load auth data from localStorage', error);
             this.clearAuth();
         }
+    },
+
+    // Create a default user when we have a token but no user data
+    createDefaultUser() {
+        const defaultUser: User = {
+            id: '1',
+            email: 'user@example.com',
+            name: 'Aktons',
+            userType: 'client'
+        };
+
+        this.user = defaultUser;
+        localStorage.setItem('digiprop_user', JSON.stringify(defaultUser));
     },
 
     // Set auth data
@@ -175,6 +198,8 @@ export const authStore = {
 
         localStorage.setItem('digiprop_user', JSON.stringify(user));
         localStorage.setItem('digiprop_token', token);
+
+        console.log("Auth data set successfully");
     },
 
     // Clear auth data
