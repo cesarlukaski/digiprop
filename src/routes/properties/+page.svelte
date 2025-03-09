@@ -28,7 +28,7 @@
         {
             id: 1,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Completed",
@@ -37,7 +37,7 @@
         {
             id: 2,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Pending",
@@ -46,7 +46,7 @@
         {
             id: 3,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Completed",
@@ -55,7 +55,7 @@
         {
             id: 4,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Completed",
@@ -64,16 +64,16 @@
         {
             id: 5,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
-            status: "Completed",
-            payment: "Paid",
+            status: "Pending",
+            payment: "Pending",
         },
         {
             id: 6,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Completed",
@@ -82,7 +82,7 @@
         {
             id: 7,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Completed",
@@ -91,13 +91,35 @@
         {
             id: 8,
             address: "78 Court Street",
-            fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
+            client: "Aktons",
+            city: "Birmingham",
+            status: "Completed",
+            payment: "Paid",
+        },
+        {
+            id: 9,
+            address: "78 Court Street",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
+            client: "Aktons",
+            city: "Birmingham",
+            status: "Completed",
+            payment: "Paid",
+        },
+        {
+            id: 10,
+            address: "78 Court Street",
+            fullAddress: "78 Court Street Tonypandy, CF 28L 0B",
             client: "Aktons",
             city: "Birmingham",
             status: "Completed",
             payment: "Paid",
         },
     ];
+
+    // Sorting variables
+    let sortColumn: keyof PropertyItem | null = null;
+    let sortDirection: "asc" | "desc" = "asc";
 
     // Check if user is authenticated
     onMount(async () => {
@@ -111,9 +133,8 @@
         try {
             // Instead of API call, use sample data
             // properties = await api.getProperties();
-            properties = sampleProperties;
-            filteredProperties = [...properties];
-            calculatePagination();
+            properties = [...sampleProperties];
+            filterProperties();
         } catch (err) {
             error = (err as Error).message || "Failed to load properties";
         } finally {
@@ -121,16 +142,9 @@
         }
     });
 
-    // Handle search
-    function handleSearch() {
-        filterProperties();
-        currentPage = 1;
-        calculatePagination();
-    }
-
     // Filter properties based on search query
     function filterProperties() {
-        if (!searchQuery.trim()) {
+        if (!searchQuery) {
             filteredProperties = [...properties];
         } else {
             const query = searchQuery.toLowerCase();
@@ -138,237 +152,183 @@
                 (property) =>
                     property.address.toLowerCase().includes(query) ||
                     property.client.toLowerCase().includes(query) ||
-                    property.city.toLowerCase().includes(query),
+                    property.city.toLowerCase().includes(query) ||
+                    property.status.toLowerCase().includes(query),
             );
+        }
+        totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+        if (currentPage > totalPages) {
+            currentPage = 1;
         }
     }
 
-    // Calculate pagination
-    function calculatePagination() {
-        totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+    // Sort properties
+    function sortProperties(column: keyof PropertyItem) {
+        if (sortColumn === column) {
+            sortDirection = sortDirection === "asc" ? "desc" : "asc";
+        } else {
+            sortColumn = column;
+            sortDirection = "asc";
+        }
+
+        filteredProperties = [...filteredProperties].sort((a, b) => {
+            const valueA = String(a[column] || "").toLowerCase();
+            const valueB = String(b[column] || "").toLowerCase();
+
+            if (sortDirection === "asc") {
+                return valueA.localeCompare(valueB);
+            } else {
+                return valueB.localeCompare(valueA);
+            }
+        });
+    }
+
+    // Handle search
+    function handleSearch() {
+        filterProperties();
     }
 
     // Get current page items
-    $: paginatedProperties = filteredProperties.slice(
+    $: {
+        if (searchQuery !== undefined) {
+            filterProperties();
+        }
+    }
+
+    $: currentItems = filteredProperties.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage,
     );
 
     // Navigation functions
-    function nextPage() {
+    function goToPage(page: number) {
+        currentPage = page;
+    }
+
+    function goToNextPage() {
         if (currentPage < totalPages) {
             currentPage++;
         }
     }
 
-    function previousPage() {
+    function goToPreviousPage() {
         if (currentPage > 1) {
             currentPage--;
         }
     }
 
     function bookProject() {
-        goto("/new-project");
+        goto("/booking");
     }
 
-    function viewPropertyDetails(id: number) {
+    function viewProperty(id: number) {
         goto(`/properties/${id}`);
     }
 </script>
 
-<div class="p-6 bg-white">
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-xl font-semibold">All Property</h1>
-            <p class="text-sm text-gray-500">View property listings</p>
+<div class="properties-container">
+    <div class="header-container">
+        <div class="title-container">
+            <h1>All Property</h1>
+            <p class="title-description">All properties assigned</p>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="relative">
+
+        <div class="actions-container">
+            <div class="search-box">
                 <input
                     type="text"
                     placeholder="Search"
                     bind:value={searchQuery}
                     on:input={handleSearch}
-                    class="py-2 px-4 pr-10 rounded border border-gray-300 w-64 focus:outline-none"
                 />
                 <svg
-                    class="absolute right-3 top-2.5 w-5 h-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    ></path>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
             </div>
-            <button
-                on:click={bookProject}
-                class="bg-black text-white px-4 py-2 rounded font-medium text-sm"
+            <button class="book-project-btn" on:click={bookProject}
+                >Book A Project</button
             >
-                Book A Project
-            </button>
         </div>
     </div>
 
     {#if loading}
-        <div class="flex justify-center items-center h-64">
-            <div
-                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
-            ></div>
-        </div>
+        <div class="loading">Loading properties...</div>
     {:else if error}
-        <div
-            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
-        >
-            <p>{error}</p>
-        </div>
+        <div class="error-message">{error}</div>
     {:else}
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+        <div class="properties-table-container">
+            <table class="properties-table">
                 <thead>
                     <tr>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                            on:click={() => sortProperties("address")}
+                            class:active={sortColumn === "address"}
                         >
-                            <div class="flex items-center">
-                                Address
-                                <svg
-                                    class="w-4 h-4 ml-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 9l-7 7-7-7"
-                                    ></path>
-                                </svg>
-                            </div>
+                            Address
+                            <span class="sort-icon">•</span>
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                            on:click={() => sortProperties("client")}
+                            class:active={sortColumn === "client"}
                         >
-                            <div class="flex items-center">
-                                Client
-                                <svg
-                                    class="w-4 h-4 ml-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 9l-7 7-7-7"
-                                    ></path>
-                                </svg>
-                            </div>
+                            Client
+                            <span class="sort-icon">•</span>
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                            on:click={() => sortProperties("city")}
+                            class:active={sortColumn === "city"}
                         >
-                            <div class="flex items-center">
-                                City
-                                <svg
-                                    class="w-4 h-4 ml-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 9l-7 7-7-7"
-                                    ></path>
-                                </svg>
-                            </div>
+                            City
+                            <span class="sort-icon">•</span>
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                            on:click={() => sortProperties("payment")}
+                            class:active={sortColumn === "payment"}
                         >
-                            <div class="flex items-center">
-                                Payments
-                                <svg
-                                    class="w-4 h-4 ml-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 9l-7 7-7-7"
-                                    ></path>
-                                </svg>
-                            </div>
+                            Payments
+                            <span class="sort-icon">•</span>
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                            on:click={() => sortProperties("status")}
+                            class:active={sortColumn === "status"}
                         >
-                            <div class="flex items-center">
-                                Status
-                                <svg
-                                    class="w-4 h-4 ml-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M19 9l-7 7-7-7"
-                                    ></path>
-                                </svg>
-                            </div>
+                            Status
+                            <span class="sort-icon">•</span>
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {#each paginatedProperties as property}
-                        <tr
-                            class="hover:bg-gray-50 cursor-pointer"
-                            on:click={() => viewPropertyDetails(property.id)}
-                        >
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">
-                                    {property.address}
-                                </div>
-                                <div class="text-sm text-gray-500">
+                <tbody>
+                    {#each currentItems as property (property.id)}
+                        <tr on:click={() => viewProperty(property.id)}>
+                            <td class="address-cell">
+                                <div>{property.address}</div>
+                                <div class="full-address">
                                     {property.fullAddress}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">
-                                    {property.client}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">
-                                    {property.city}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td>{property.client}</td>
+                            <td>{property.city}</td>
+                            <td>
                                 <span
-                                    class={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    ${property.payment === "Paid" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                                    class="payment-status {property.payment.toLowerCase()}"
                                 >
                                     {property.payment}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td>
                                 <span
-                                    class={`text-sm 
-                                    ${property.status === "Completed" ? "text-green-600" : "text-red-600"}`}
+                                    class="status-badge {property.status.toLowerCase()}"
                                 >
                                     {property.status}
                                 </span>
@@ -380,28 +340,243 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex justify-between items-center mt-5 px-2">
-            <button
-                on:click={previousPage}
-                class="px-3 py-1 border border-gray-300 rounded text-sm"
-                disabled={currentPage === 1}
-            >
-                Previous
-            </button>
-            <div class="text-sm text-gray-700">
-                Page {currentPage} of {totalPages}
+        {#if totalPages > 1}
+            <div class="pagination">
+                <button
+                    class="pagination-btn"
+                    disabled={currentPage === 1}
+                    on:click={goToPreviousPage}
+                >
+                    Previous
+                </button>
+                <div class="page-numbers">
+                    {#each Array(totalPages) as _, i}
+                        <button
+                            class="page-number {currentPage === i + 1
+                                ? 'active'
+                                : ''}"
+                            on:click={() => goToPage(i + 1)}
+                        >
+                            {i + 1}
+                        </button>
+                    {/each}
+                </div>
+                <button
+                    class="pagination-btn"
+                    disabled={currentPage === totalPages}
+                    on:click={goToNextPage}
+                >
+                    Next
+                </button>
             </div>
-            <button
-                on:click={nextPage}
-                class="px-3 py-1 border border-gray-300 rounded text-sm"
-                disabled={currentPage === totalPages}
-            >
-                Next
-            </button>
-        </div>
+        {/if}
     {/if}
 </div>
 
 <style>
-    /* Add any styles if needed */
+    .properties-container {
+        padding: 24px;
+        max-width: 100%;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .title-container h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+        color: #333;
+    }
+
+    .title-description {
+        font-size: 14px;
+        color: #666;
+        margin: 4px 0 0 0;
+    }
+
+    .actions-container {
+        display: flex;
+        gap: 16px;
+    }
+
+    .search-box {
+        position: relative;
+    }
+
+    .search-box input {
+        padding: 8px 12px;
+        padding-right: 32px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        font-size: 14px;
+        width: 200px;
+    }
+
+    .search-box svg {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    .book-project-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .properties-table-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+        background-color: white;
+    }
+
+    .properties-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .properties-table th {
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 500;
+        color: #333;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .properties-table th.active {
+        font-weight: 600;
+    }
+
+    .sort-icon {
+        font-size: 16px;
+        margin-left: 4px;
+        color: #ccc;
+    }
+
+    .properties-table td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #333;
+    }
+
+    .properties-table tr:hover {
+        background-color: #f9f9f9;
+        cursor: pointer;
+    }
+
+    .address-cell {
+        font-weight: 500;
+    }
+
+    .full-address {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+        font-weight: normal;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .status-badge.completed {
+        background-color: #e6f7ed;
+        color: #2e7d32;
+    }
+
+    .status-badge.pending {
+        background-color: #fff8e1;
+        color: #f57c00;
+    }
+
+    .payment-status {
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .payment-status.paid {
+        color: #2e7d32;
+    }
+
+    .payment-status.pending {
+        color: #f57c00;
+    }
+
+    .loading,
+    .error-message {
+        text-align: center;
+        padding: 24px;
+        color: #666;
+    }
+
+    .error-message {
+        color: #d32f2f;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 24px;
+        gap: 8px;
+    }
+
+    .pagination-btn {
+        background: none;
+        border: 1px solid #e0e0e0;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .page-numbers {
+        display: flex;
+        gap: 8px;
+    }
+
+    .page-number {
+        background: none;
+        border: 1px solid #e0e0e0;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .page-number.active {
+        background-color: #000;
+        color: white;
+        border-color: #000;
+    }
 </style>

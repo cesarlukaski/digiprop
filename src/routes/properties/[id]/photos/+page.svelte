@@ -5,7 +5,7 @@
     import { authStore } from "$lib/api";
 
     // Property data
-    const propertyAddress = "78 Court Street Tonypandy, CF 2RL 0B";
+    const propertyAddress = "78 Court Street, Tonypandy, CF 28L 0B";
     const propertyId = $page.params.id;
 
     // Sample photos data
@@ -171,6 +171,11 @@
         }
     }
 
+    // Return to property details
+    function goBack() {
+        goto(`/properties/${propertyId}`);
+    }
+
     onMount(() => {
         // Check authentication
         authStore.init();
@@ -182,111 +187,77 @@
     });
 </script>
 
-<div class="flex h-screen bg-gray-100">
-    <!-- Sidebar navigation -->
-    <div
-        class="w-20 bg-white border-r border-gray-200 flex flex-col items-center py-6"
-    >
-        <div class="space-y-8">
-            {#each navItems as item}
-                <button
-                    class="flex flex-col items-center justify-center w-12 h-12 rounded-full {item.active
-                        ? 'bg-gray-100'
-                        : 'hover:bg-gray-50'}"
-                    on:click={() => navigateTo(item.id)}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-gray-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="1.5"
-                            d={item.icon}
-                        />
-                    </svg>
-                    <span class="text-xs text-gray-500 mt-1">{item.label}</span>
-                </button>
-            {/each}
-        </div>
+<div class="photos-container">
+    <div class="breadcrumb">
+        <p>Dashboard / 2D Enhanced photos</p>
     </div>
 
-    <!-- Main content -->
-    <div class="flex-1 overflow-auto">
-        <!-- Header with breadcrumb and user profile -->
-        <div
-            class="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-white"
-        >
-            <div class="flex items-center text-sm text-gray-600">
-                <a href="/properties" class="hover:text-gray-900">Dashboard</a>
-                <span class="mx-2">/</span>
-                <span>2D Enhanced photos</span>
+    <div class="photos-content">
+        <!-- Header with property overview -->
+        <div class="page-header">
+            <div class="header-title">
+                <h1>2D Enhanced photos</h1>
+                <p class="header-address">{propertyAddress}</p>
             </div>
-            <div class="flex items-center">
-                <span class="mr-2 text-sm font-medium">{user.name}</span>
-                <div class="w-8 h-8 rounded-full overflow-hidden">
-                    <img
-                        src={user.avatar}
-                        alt={user.name}
-                        class="w-full h-full object-cover"
-                    />
-                </div>
+            <div class="header-actions">
+                <button class="action-btn secondary-btn" on:click={goBack}
+                    >Back</button
+                >
+                <button
+                    class="action-btn primary-btn"
+                    on:click={downloadAllPhotos}
+                >
+                    Download
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                        ></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- Content area -->
-        <div class="p-6">
-            <!-- Property info and actions -->
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h1 class="text-xl font-medium">2D Enhanced photos</h1>
-                    <p class="text-sm text-gray-500">
-                        Address: {propertyAddress}
-                    </p>
-                </div>
-                <button
-                    on:click={downloadAllPhotos}
-                    class="px-4 py-2 bg-black text-white rounded text-sm"
-                >
-                    Download
-                </button>
-            </div>
-
-            <!-- Photo gallery - 5 columns grid -->
-            <div class="bg-white border border-gray-200 rounded-lg p-4">
-                <div class="grid grid-cols-5 gap-4">
-                    {#each photos as photo}
-                        <div class="relative group">
-                            <div
-                                class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border border-gray-200"
+        <!-- Photo gallery grid -->
+        <div class="gallery-container">
+            <div class="photo-grid">
+                {#each photos as photo}
+                    <div class="photo-item">
+                        <div class="photo-square">
+                            <button
+                                class="photo-button"
+                                on:click={() => openModal(photo)}
                             >
-                                <button
-                                    on:click={() => openModal(photo)}
-                                    class="w-full h-full flex items-center justify-center"
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    class="camera-icon"
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="h-8 w-8 text-gray-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="1.5"
-                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                        />
-                                    </svg>
-                                </button>
-                            </div>
+                                    <path
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                </svg>
+                            </button>
                         </div>
-                    {/each}
-                </div>
+                    </div>
+                {/each}
             </div>
         </div>
     </div>
@@ -294,59 +265,56 @@
 
 <!-- Photo modal -->
 {#if modalOpen}
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75 transition-opacity"
-        on:click={closeModal}
-    >
-        <div class="relative max-w-5xl max-h-full" on:click|stopPropagation>
+    <div class="modal-overlay" on:click={closeModal}>
+        <div class="modal-content" on:click|stopPropagation>
             <!-- Close button -->
-            <button
-                class="absolute -top-10 right-0 text-white hover:text-gray-300"
-                on:click={closeModal}
-            >
+            <button class="modal-close-btn" on:click={closeModal}>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-8 w-8"
-                    fill="none"
+                    width="24"
+                    height="24"
                     viewBox="0 0 24 24"
+                    fill="none"
                     stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                    />
+                    <path d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
 
             <!-- Image -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-xl">
+            <div class="modal-image-container">
                 <img
                     src={selectedPhoto?.url}
                     alt={selectedPhoto?.title}
-                    class="w-full h-auto max-h-[80vh] object-contain"
+                    class="modal-image"
                 />
-                <div class="p-4 flex justify-between items-center bg-white">
-                    <h3 class="text-lg font-medium text-gray-900">
+                <div class="modal-footer">
+                    <h3 class="modal-title">
                         {selectedPhoto?.title}
                     </h3>
                     <button
-                        class="px-4 py-2 bg-black text-white rounded text-sm flex items-center"
+                        class="download-btn"
                         on:click={() => downloadPhoto(selectedPhoto)}
                     >
                         Download
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4 ml-1"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
                         >
-                            <path
-                                fill-rule="evenodd"
-                                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                                clip-rule="evenodd"
-                            />
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                            ></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
                     </button>
                 </div>
@@ -356,17 +324,248 @@
 {/if}
 
 <style>
-    /* Aspect ratio utility for square images */
-    .aspect-square {
-        position: relative;
-        padding-bottom: 100%; /* 1:1 aspect ratio */
+    .photos-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
     }
 
-    .aspect-square > * {
+    .breadcrumb {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    .photos-content {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .header-title h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+    }
+
+    .header-address {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .primary-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+    }
+
+    .primary-btn:hover {
+        background-color: #212529;
+    }
+
+    .secondary-btn {
+        background-color: white;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+
+    .secondary-btn:hover {
+        background-color: #f8f9fa;
+    }
+
+    .gallery-container {
+        padding: 20px;
+    }
+
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+    }
+
+    .photo-item {
+        width: 100%;
+    }
+
+    .photo-square {
+        position: relative;
+        width: 100%;
+        padding-top: 100%; /* 1:1 Aspect Ratio */
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .photo-button {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .photo-button:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .camera-icon {
+        color: #6c757d;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        max-width: 900px;
+        width: 100%;
+        max-height: 90vh;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modal-close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .modal-close-btn:hover {
+        background-color: white;
+    }
+
+    .modal-image-container {
+        width: 100%;
+    }
+
+    .modal-image {
+        width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+        display: block;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-top: 1px solid #f1f3f5;
+    }
+
+    .modal-title {
+        font-size: 18px;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .download-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .download-btn:hover {
+        background-color: #212529;
+    }
+
+    @media (max-width: 1200px) {
+        .photo-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .photo-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .header-actions {
+            width: 100%;
+        }
+
+        .photo-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .photo-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>

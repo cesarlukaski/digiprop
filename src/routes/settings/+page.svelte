@@ -3,153 +3,146 @@
     import { goto } from "$app/navigation";
     import { authStore } from "$lib/api";
 
-    // User profile data
-    let userData = {
-        firstName: "Pathum",
-        lastName: "Pathum",
-        email: "Pathum@email.com",
-        phone: "0779999999",
-    };
+    // Personal information
+    let firstName = "Pathum";
+    let lastName = "Bandara";
+    let email = "Pathum@gmail.com";
+    let phoneNumber = "07799999999";
 
     // Availability settings
-    let availabilitySettings = [
+    interface DaySchedule {
+        day: string;
+        enabled: boolean;
+        startTime: string;
+        endTime: string;
+        hours: string;
+    }
+
+    let availability: DaySchedule[] = [
         {
             day: "Monday",
-            checked: true,
+            enabled: true,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "11 Hours",
-            available: true,
         },
         {
             day: "Tuesday",
-            checked: true,
+            enabled: true,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "11 Hours",
-            available: true,
         },
         {
             day: "Wednesday",
-            checked: true,
+            enabled: true,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "11 Hours",
-            available: true,
         },
         {
             day: "Thursday",
-            checked: true,
+            enabled: true,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "11 Hours",
-            available: true,
         },
         {
             day: "Friday",
-            checked: true,
+            enabled: true,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "11 Hours",
-            available: true,
         },
         {
             day: "Saturday",
-            checked: false,
+            enabled: false,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "Not available",
-            available: false,
         },
         {
             day: "Sunday",
-            checked: false,
+            enabled: false,
             startTime: "8:30 AM",
             endTime: "7:30 PM",
             hours: "Not available",
-            available: false,
         },
     ];
 
-    // Navigation items
-    const navItems = [
-        {
-            id: "available-projects",
-            label: "Available Projects",
-            icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-            active: false,
-        },
-        {
-            id: "my-projects",
-            label: "My Projects",
-            icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
-            active: false,
-        },
-        {
-            id: "diary",
-            label: "Diary",
-            icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
-            active: false,
-        },
-        {
-            id: "payment",
-            label: "Payment",
-            icon: "M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z",
-            active: false,
-        },
-        {
-            id: "settings",
-            label: "Settings",
-            icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
-            active: true,
-        },
-    ];
+    // Editing states
+    let isEditingFirstName = false;
+    let isEditingLastName = false;
+    let isEditingEmail = false;
+    let isEditingPhone = false;
 
-    // User profile
-    const user = {
-        name: "Pathum Bandara",
-        role: "Photographer",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    };
+    // Calculate hours between start and end time
+    function calculateHours(startTime: string, endTime: string): string {
+        if (!startTime || !endTime) return "0 Hours";
 
-    // Pagination
-    let currentPage = 1;
-    const totalPages = 10;
+        const parseTime = (timeStr: string) => {
+            const [time, modifier] = timeStr.split(" ");
+            let [hours, minutes] = time.split(":");
+            let hoursNum = parseInt(hours);
 
-    // Navigate to a different section
-    function navigateTo(itemId: string) {
-        goto(`/${itemId}`);
+            if (modifier === "PM" && hoursNum < 12) hoursNum += 12;
+            if (modifier === "AM" && hoursNum === 12) hoursNum = 0;
+
+            return hoursNum + parseInt(minutes) / 60;
+        };
+
+        const start = parseTime(startTime);
+        const end = parseTime(endTime);
+        const diff = end - start;
+
+        return diff <= 0 ? "0 Hours" : `${Math.round(diff)} Hours`;
     }
 
-    // Handle form input changes
-    function handleInputChange(field: string, value: string) {
-        userData = { ...userData, [field]: value };
+    // Update availability when time changes
+    function updateAvailability(index: number) {
+        if (availability[index].enabled) {
+            availability[index].hours = calculateHours(
+                availability[index].startTime,
+                availability[index].endTime,
+            );
+        } else {
+            availability[index].hours = "Not available";
+        }
+        availability = [...availability]; // Trigger reactivity
     }
 
     // Toggle day availability
     function toggleDay(index: number) {
-        availabilitySettings[index].checked =
-            !availabilitySettings[index].checked;
-        availabilitySettings[index].available =
-            availabilitySettings[index].checked;
-        availabilitySettings[index].hours = availabilitySettings[index].checked
-            ? "11 Hours"
-            : "Not available";
-        availabilitySettings = [...availabilitySettings];
+        availability[index].enabled = !availability[index].enabled;
+        updateAvailability(index);
     }
 
-    // Navigate to previous page
-    function goToPreviousPage() {
-        if (currentPage > 1) {
-            currentPage--;
+    // Start editing a field
+    function startEditing(field: "firstName" | "lastName" | "email" | "phone") {
+        switch (field) {
+            case "firstName":
+                isEditingFirstName = true;
+                break;
+            case "lastName":
+                isEditingLastName = true;
+                break;
+            case "email":
+                isEditingEmail = true;
+                break;
+            case "phone":
+                isEditingPhone = true;
+                break;
         }
+        // Focus the input after a brief delay to allow for rendering
+        setTimeout(() => {
+            const input = document.getElementById(field);
+            if (input) input.focus();
+        }, 50);
     }
 
-    // Navigate to next page
-    function goToNextPage() {
-        if (currentPage < totalPages) {
-            currentPage++;
-        }
+    // Save settings
+    function saveSettings() {
+        alert("Settings saved successfully!");
     }
 
     onMount(() => {
@@ -163,393 +156,632 @@
     });
 </script>
 
-<div class="flex h-screen bg-gray-100">
-    <!-- Sidebar navigation -->
-    <div class="w-[145px] bg-white border-r border-gray-200 flex flex-col py-6">
-        <div class="space-y-1 px-3">
-            {#each navItems as item}
-                <button
-                    class="flex items-center w-full px-2 py-2 text-left rounded-md {item.active
-                        ? 'bg-gray-100'
-                        : 'hover:bg-gray-50'}"
-                    on:click={() => navigateTo(item.id)}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5 mr-3 text-gray-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="1.5"
-                            d={item.icon}
-                        />
-                    </svg>
-                    <span class="text-sm text-gray-700">{item.label}</span>
-                </button>
-            {/each}
-        </div>
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>Settings</h1>
+        <p class="subtitle">Update information for new property files</p>
     </div>
 
-    <!-- Main content -->
-    <div class="flex-1 overflow-auto">
-        <!-- Header with user profile -->
-        <div
-            class="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-white"
-        >
-            <div class="flex items-center">
-                <button class="mr-4 relative">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-gray-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                        />
-                    </svg>
-                    <span
-                        class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"
-                    ></span>
-                </button>
-                <button class="mr-4">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-gray-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                        />
-                    </svg>
-                </button>
+    <div class="user-profile">
+        <div class="profile-info">
+            <span>Pathum Bandara</span>
+            <span class="user-role">Photographer</span>
             </div>
-            <div class="flex items-center">
-                <div class="mr-3 text-right">
-                    <div class="text-sm font-medium">{user.name}</div>
-                    <div class="text-xs text-gray-500">{user.role}</div>
-                </div>
-                <div class="w-8 h-8 rounded-full overflow-hidden">
-                    <img
-                        src={user.avatar}
-                        alt={user.name}
-                        class="w-full h-full object-cover"
-                    />
-                </div>
-            </div>
+        <div class="profile-avatar">
+            <div class="avatar-placeholder">PB</div>
         </div>
-
-        <!-- Content area -->
-        <div class="p-6">
-            <div class="max-w-4xl mx-auto">
-                <!-- Settings header -->
-                <div class="mb-6">
-                    <h1 class="text-xl font-medium">Settings</h1>
-                    <p class="text-sm text-gray-500">
-                        Change settings for this property here.
-                    </p>
                 </div>
 
-                <!-- Personal Information -->
-                <div class="mb-8">
-                    <h2 class="text-lg font-medium mb-4">
-                        Personal Information
-                    </h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="relative">
-                            <label class="block text-xs text-gray-500 mb-1"
-                                >First Name</label
-                            >
+    <div class="settings-content">
+        <!-- Personal Information Section -->
+        <section class="settings-section">
+            <h2 class="section-title">Personal Information</h2>
+
+            <div class="form-grid">
+                <!-- First Name -->
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <div class="input-container">
+                        {#if isEditingFirstName}
                             <input
+                                id="firstName"
                                 type="text"
-                                value={userData.firstName}
-                                on:input={(e) =>
-                                    handleInputChange(
-                                        "firstName",
-                                        (e.target as HTMLInputElement).value,
-                                    )}
-                                class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                                bind:value={firstName}
+                                on:blur={() => (isEditingFirstName = false)}
+                                on:keydown={(e) =>
+                                    e.key === "Enter" &&
+                                    (isEditingFirstName = false)}
                             />
-                            <button class="absolute right-2 top-7">
+                        {:else}
+                            <div class="input-display">
+                                {firstName}
+                            </div>
+                            <button
+                                class="edit-btn"
+                                on:click={() => startEditing("firstName")}
+                                aria-label="Edit first name"
+                            >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 text-gray-400"
-                                    fill="none"
+                                    width="18"
+                                    height="18"
                                     viewBox="0 0 24 24"
+                                    fill="none"
                                     stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
                                 >
                                     <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                    />
+                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                    ></path>
+                                    <path
+                                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                    ></path>
                                 </svg>
                             </button>
+                        {/if}
+                    </div>
                         </div>
-                        <div class="relative">
-                            <label class="block text-xs text-gray-500 mb-1"
-                                >Last Name</label
-                            >
+
+                <!-- Last Name -->
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <div class="input-container">
+                        {#if isEditingLastName}
                             <input
+                                id="lastName"
                                 type="text"
-                                value={userData.lastName}
-                                on:input={(e) =>
-                                    handleInputChange(
-                                        "lastName",
-                                        (e.target as HTMLInputElement).value,
-                                    )}
-                                class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                                bind:value={lastName}
+                                on:blur={() => (isEditingLastName = false)}
+                                on:keydown={(e) =>
+                                    e.key === "Enter" &&
+                                    (isEditingLastName = false)}
                             />
-                            <button class="absolute right-2 top-7">
+                        {:else}
+                            <div class="input-display">
+                                {lastName}
+                            </div>
+                            <button
+                                class="edit-btn"
+                                on:click={() => startEditing("lastName")}
+                                aria-label="Edit last name"
+                            >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 text-gray-400"
-                                    fill="none"
+                                    width="18"
+                                    height="18"
                                     viewBox="0 0 24 24"
+                                    fill="none"
                                     stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
                                 >
                                     <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                    />
+                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                    ></path>
+                                    <path
+                                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                    ></path>
                                 </svg>
                             </button>
+                        {/if}
+                    </div>
                         </div>
-                        <div class="relative">
-                            <label class="block text-xs text-gray-500 mb-1"
-                                >Email</label
-                            >
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-container">
+                        {#if isEditingEmail}
                             <input
+                                id="email"
                                 type="email"
-                                value={userData.email}
-                                on:input={(e) =>
-                                    handleInputChange(
-                                        "email",
-                                        (e.target as HTMLInputElement).value,
-                                    )}
-                                class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                                bind:value={email}
+                                on:blur={() => (isEditingEmail = false)}
+                                on:keydown={(e) =>
+                                    e.key === "Enter" &&
+                                    (isEditingEmail = false)}
                             />
-                            <button class="absolute right-2 top-7">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 text-gray-400"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="relative">
-                            <label class="block text-xs text-gray-500 mb-1"
-                                >Phone Number</label
+                        {:else}
+                            <div class="input-display">
+                                {email}
+                            </div>
+                            <button
+                                class="edit-btn"
+                                on:click={() => startEditing("email")}
+                                aria-label="Edit email"
                             >
-                            <input
-                                type="tel"
-                                value={userData.phone}
-                                on:input={(e) =>
-                                    handleInputChange(
-                                        "phone",
-                                        (e.target as HTMLInputElement).value,
-                                    )}
-                                class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                            />
-                            <button class="absolute right-2 top-7">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 text-gray-400"
-                                    fill="none"
+                                    width="18"
+                                    height="18"
                                     viewBox="0 0 24 24"
+                                    fill="none"
                                     stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
                                 >
                                     <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                    />
+                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                    ></path>
+                                    <path
+                                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                    ></path>
                                 </svg>
                             </button>
+                        {/if}
+                    </div>
                         </div>
+
+                <!-- Phone Number -->
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <div class="input-container">
+                        {#if isEditingPhone}
+                            <input
+                                id="phone"
+                                type="tel"
+                                bind:value={phoneNumber}
+                                on:blur={() => (isEditingPhone = false)}
+                                on:keydown={(e) =>
+                                    e.key === "Enter" &&
+                                    (isEditingPhone = false)}
+                            />
+                        {:else}
+                            <div class="input-display">
+                                {phoneNumber}
+                            </div>
+                            <button
+                                class="edit-btn"
+                                on:click={() => startEditing("phone")}
+                                aria-label="Edit phone number"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                                    ></path>
+                                    <path
+                                        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                                    ></path>
+                                </svg>
+                            </button>
+                        {/if}
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <!-- Set Availability -->
-                <div class="mb-8">
-                    <h2 class="text-lg font-medium mb-4">Set Availability</h2>
-                    <div class="space-y-3">
-                        {#each availabilitySettings as setting, index}
-                            <div class="flex items-center">
-                                <div class="w-1/4 flex items-center">
+        <!-- Availability Section -->
+        <section class="settings-section">
+            <h2 class="section-title">Set Availability</h2>
+
+            <div class="availability-grid">
+                {#each availability as day, i}
+                    <div class="day-row">
+                        <div class="day-checkbox">
                                     <input
                                         type="checkbox"
-                                        id={`day-${index}`}
-                                        class="h-4 w-4 text-black rounded border-gray-300 focus:ring-0"
-                                        checked={setting.checked}
-                                        on:change={() => toggleDay(index)}
-                                    />
-                                    <label
-                                        for={`day-${index}`}
-                                        class="ml-2 text-sm text-gray-700"
-                                        >{setting.day}</label
-                                    >
+                                id={`day-${i}`}
+                                bind:checked={day.enabled}
+                                on:change={() => toggleDay(i)}
+                            />
+                            <label for={`day-${i}`}>{day.day}</label>
                                 </div>
-                                <div class="w-1/4 px-2">
-                                    <div class="relative">
-                                        <input
-                                            type="text"
-                                            value={setting.startTime}
-                                            class="w-full p-2 pr-8 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-                                            disabled={!setting.checked}
-                                        />
-                                        <button
-                                            class="absolute right-2 top-2.5 text-gray-400"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="h-4 w-4"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    fill-rule="evenodd"
-                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                                    clip-rule="evenodd"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="w-1/4 px-2">
-                                    <div class="relative">
-                                        <input
-                                            type="text"
-                                            value={setting.endTime}
-                                            class="w-full p-2 pr-8 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-                                            disabled={!setting.checked}
-                                        />
-                                        <button
-                                            class="absolute right-2 top-2.5 text-gray-400"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="h-4 w-4"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    fill-rule="evenodd"
-                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                                    clip-rule="evenodd"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="w-1/4 px-2">
-                                    <span class="text-sm text-gray-700"
-                                        >{setting.hours}</span
-                                    >
-                                </div>
-                            </div>
-                        {/each}
-                    </div>
-                </div>
 
-                <!-- Pagination -->
-                <div
-                    class="flex justify-between items-center mt-8 border-t border-gray-200 pt-4"
-                >
-                    <button
-                        class="px-4 py-2 border border-gray-300 rounded text-sm {currentPage ===
-                        1
-                            ? 'text-gray-400'
-                            : 'text-gray-700 hover:bg-gray-50'}"
-                        on:click={goToPreviousPage}
-                        disabled={currentPage === 1}
-                    >
-                        Previous
-                    </button>
-                    <div class="text-sm text-gray-600">
-                        Page {currentPage} of {totalPages}
+                        <div class="time-selector">
+                            <div class="time-picker">
+                                        <input
+                                            type="text"
+                                    value={day.startTime}
+                                    on:input={(e) => {
+                                        day.startTime = e.currentTarget.value;
+                                        updateAvailability(i);
+                                    }}
+                                    disabled={!day.enabled}
+                                        />
+                                        <button
+                                    class="time-edit-btn"
+                                    disabled={!day.enabled}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"
+                                        ></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                            <div class="time-picker">
+                                        <input
+                                            type="text"
+                                    value={day.endTime}
+                                    on:input={(e) => {
+                                        day.endTime = e.currentTarget.value;
+                                        updateAvailability(i);
+                                    }}
+                                    disabled={!day.enabled}
+                                        />
+                                        <button
+                                    class="time-edit-btn"
+                                    disabled={!day.enabled}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"
+                                        ></polyline>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                            <div class="hours-display">
+                                {day.hours}
                     </div>
-                    <button
-                        class="px-4 py-2 border border-gray-300 rounded text-sm {currentPage ===
-                        totalPages
-                            ? 'text-gray-400'
-                            : 'text-gray-700 hover:bg-gray-50'}"
-                        on:click={goToNextPage}
-                        disabled={currentPage === totalPages}
-                    >
-                        Next
-                    </button>
                 </div>
+                    </div>
+                {/each}
             </div>
+        </section>
+    </div>
+
+    <!-- Bottom navigation -->
+    <div class="settings-navigation">
+        <button class="nav-btn prev-btn">Previous</button>
+        <div class="page-indicator">Page 1 of 10</div>
+        <button class="nav-btn next-btn">Next</button>
         </div>
+
+    <!-- Save button - Fixed at bottom -->
+    <div class="save-container">
+        <button class="save-btn" on:click={saveSettings}>Save Changes</button>
     </div>
 </div>
 
 <style>
-    /* Custom checkbox styling */
-    input[type="checkbox"] {
-        appearance: none;
-        -webkit-appearance: none;
-        height: 16px;
-        width: 16px;
-        background-color: #fff;
-        border: 1px solid #d1d5db;
-        border-radius: 3px;
+    .settings-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .settings-header {
+        margin-bottom: 24px;
+    }
+
+    .settings-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .settings-content {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        margin-bottom: 60px; /* Space for the save button */
+    }
+
+    .settings-section {
+        margin-bottom: 32px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        color: #212529;
+    }
+
+    /* Form grid for personal information */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    label {
+        display: block;
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+
+    .input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #212529;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .input-display {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #212529;
+        background-color: #f8f9fa;
+    }
+
+    .edit-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+    }
+
+    .edit-btn:hover {
+        color: #212529;
+    }
+
+    /* Availability grid */
+    .availability-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .day-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .day-checkbox {
+        display: flex;
+        align-items: center;
+    }
+
+    .day-checkbox input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    .time-selector {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .time-picker {
+        position: relative;
+    }
+
+    .time-picker input {
+        width: 100%;
+        padding: 10px 36px 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .time-picker input:disabled {
+        background-color: #e9ecef;
+        opacity: 0.6;
+    }
+
+    .time-edit-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
-    input[type="checkbox"]:checked {
-        background-color: #000;
-        border-color: #000;
-    }
-
-    input[type="checkbox"]:checked::after {
-        content: "";
-        display: block;
-        width: 6px;
-        height: 9px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-
-    input[type="checkbox"]:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Disabled input styling */
-    input:disabled {
-        background-color: #f9fafb;
+    .time-edit-btn:disabled {
+        opacity: 0.4;
         cursor: not-allowed;
+    }
+
+    .hours-display {
+        padding: 10px 12px;
+        font-size: 14px;
+        color: #212529;
+        text-align: center;
+    }
+
+    /* Navigation */
+    .settings-navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .nav-btn {
+        background: none;
+        border: 1px solid #dee2e6;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #212529;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+        background-color: #f8f9fa;
+    }
+
+    .page-indicator {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    /* Save button */
+    .save-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        padding: 16px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        z-index: 100;
+    }
+
+    .save-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 24px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .save-btn:hover {
+        background-color: #212529;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .time-selector {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .day-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .save-container {
+            padding: 12px;
+        }
+
+        .save-btn {
+            width: 100%;
+        }
+    }
+
+    .user-profile {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 16px;
+        gap: 12px;
+    }
+
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .user-role {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .profile-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    /* Checkbox styles refinements */
+    .day-checkbox input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        accent-color: #000;
     }
 </style>

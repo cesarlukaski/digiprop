@@ -5,34 +5,38 @@
     import { authStore } from "$lib/api";
 
     // Property data
-    const propertyAddress = "78 Court Street Tonypandy, CF 2RL 0B";
+    const propertyAddress = "78 Court Street, Tonypandy, CF 28L 0B";
     const propertyId = $page.params.id;
 
-    // Form and submission state
-    let additionalInfo = "";
-    let requestSent = false;
-    let loading = false;
+    // Property image for the virtual tour
+    const propertyImage =
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80";
 
-    // Handle form submission
-    function sendRequest() {
-        loading = true;
+    // Virtual tour URL
+    const tourUrl = window.location.href;
 
-        // Simulate API call
-        setTimeout(() => {
-            requestSent = true;
-            loading = false;
-        }, 1000);
-    }
+    // State for fullscreen mode
+    let isFullscreen = false;
 
-    // Return to property details
-    function goBack() {
-        goto(`/properties/${propertyId}`);
+    // Toggle fullscreen mode
+    function toggleFullscreen() {
+        isFullscreen = !isFullscreen;
+
+        if (isFullscreen) {
+            const elem = document.querySelector(".tour-view");
+            if (elem?.requestFullscreen) {
+                elem.requestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
     }
 
     // Copy tour link
     function copyTourLink() {
-        const link = window.location.href;
-        navigator.clipboard.writeText(link);
+        navigator.clipboard.writeText(tourUrl);
         alert("Tour link copied to clipboard!");
     }
 
@@ -40,6 +44,11 @@
     function shareTour() {
         // This would typically open a share dialog
         alert("Share functionality would open here");
+    }
+
+    // Return to property details
+    function goBack() {
+        goto(`/properties/${propertyId}`);
     }
 
     onMount(() => {
@@ -50,249 +59,293 @@
             goto("/login");
             return;
         }
+
+        // Listen for fullscreen change
+        document.addEventListener("fullscreenchange", () => {
+            isFullscreen = !!document.fullscreenElement;
+        });
     });
 </script>
 
-<div class="bg-white min-h-screen">
-    <!-- Breadcrumb and navigation -->
-    <div class="bg-gray-100 py-2 px-4">
-        <div class="max-w-7xl mx-auto flex items-center text-sm text-gray-600">
-            <a href="/properties" class="hover:text-gray-900">Dashboard</a>
-            <span class="mx-2">/</span>
-            <span>Virtual tour</span>
-        </div>
+<div class="tour-container">
+    <div class="breadcrumb">
+        <p>Dashboard / Client</p>
     </div>
 
-    <div class="max-w-7xl mx-auto py-6 px-4">
-        <!-- Header section with property info and actions -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-xl font-medium">Virtual tour</h1>
-                <p class="text-sm text-gray-500">Address: {propertyAddress}</p>
+    <div class="tour-content">
+        <!-- Header with property overview -->
+        <div class="page-header">
+            <div class="header-title">
+                <h1>Virtual Tour</h1>
+                <p class="header-address">{propertyAddress}</p>
             </div>
-            <div class="flex gap-2">
-                <button
-                    class="px-4 py-2 bg-black text-white rounded text-sm"
-                    on:click={() =>
-                        window.open("/virtual-tour-fullscreen", "_blank")}
+            <div class="header-actions">
+                <button class="action-btn secondary-btn" on:click={goBack}
+                    >Back</button
                 >
-                    View Tour
-                </button>
-                <button
-                    class="px-4 py-2 bg-gray-100 rounded text-sm flex items-center"
-                    on:click={copyTourLink}
-                >
-                    Copy
+                <button class="action-btn copy-btn" on:click={copyTourLink}>
+                    Copy Link
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 ml-1"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                     >
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"
+                        ></rect>
                         <path
-                            d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"
-                        />
-                        <path
-                            d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"
-                        />
+                            d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                        ></path>
                     </svg>
                 </button>
-                <button
-                    class="px-4 py-2 bg-gray-100 rounded text-sm flex items-center"
-                    on:click={shareTour}
-                >
+                <button class="action-btn primary-btn" on:click={shareTour}>
                     Share
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 ml-1"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                     >
-                        <path
-                            d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"
-                        />
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                     </svg>
                 </button>
             </div>
         </div>
 
-        <!-- Virtual tour preview -->
-        <div
-            class="relative w-full h-96 bg-gray-200 rounded overflow-hidden mb-8"
-        >
-            <!-- Placeholder 3D tour interface -->
-            <div class="absolute inset-0 flex items-center justify-center">
-                <img
-                    src="https://images.unsplash.com/photo-1560185007-cde436f6a4d0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                    alt="Property exterior"
-                    class="w-full h-full object-cover"
-                />
+        <!-- Virtual tour view -->
+        <div class="tour-view-container">
+            <div class="tour-view">
+                <img src={propertyImage} alt="Property virtual tour" />
 
                 <!-- Tour controls overlay -->
-                <div
-                    class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center"
-                >
-                    <div class="bg-white rounded-full p-4 shadow-lg">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-10 w-10 text-gray-700"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                            />
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Mini floor plan -->
-                <div
-                    class="absolute top-4 right-4 w-32 h-32 bg-white rounded shadow-md p-2"
-                >
-                    <div class="text-xs text-gray-700 mb-1">Second Floor</div>
-                    <div class="w-full h-24 bg-gray-100 relative">
-                        <!-- Simple floor plan representation -->
-                        <div
-                            class="absolute inset-2 border border-gray-400"
-                        ></div>
-                        <div
-                            class="absolute top-4 left-4 w-4 h-4 bg-blue-500 rounded-full"
-                        ></div>
-                    </div>
-                </div>
-
-                <!-- Tour navigation controls -->
-                <div
-                    class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4"
-                >
+                <div class="tour-controls">
                     <button
-                        class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow"
+                        class="tour-control-btn fullscreen-btn"
+                        on:click={toggleFullscreen}
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 text-gray-700"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
+                        {#if isFullscreen}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"
+                                ></path>
+                            </svg>
+                        {:else}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
                                 stroke-width="2"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+                                ></path>
+                            </svg>
+                        {/if}
                     </button>
-                    <button
-                        class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow"
-                    >
+                    <button class="tour-control-btn play-btn">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 text-gray-700"
-                            fill="none"
+                            width="24"
+                            height="24"
                             viewBox="0 0 24 24"
+                            fill="none"
                             stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Request form or success message -->
-        {#if requestSent}
-            <div
-                class="bg-green-50 border border-green-200 rounded-lg p-6 mb-8"
-            >
-                <div class="flex items-center mb-4">
-                    <svg
-                        class="w-8 h-8 text-green-500 mr-3"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                    >
-                        <path
-                            fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clip-rule="evenodd"
-                        ></path>
-                    </svg>
-                    <h3 class="text-xl font-bold text-green-800">
-                        Request Sent Successfully!
-                    </h3>
-                </div>
-                <p class="text-green-700 mb-4">
-                    Your request has been sent. We'll get back to you shortly
-                    with more information about this virtual tour.
-                </p>
-                <button
-                    on:click={goBack}
-                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                    Back to Property Details
-                </button>
-            </div>
-        {:else}
-            <div class="bg-gray-50 rounded-lg border border-gray-200 p-6 mb-8">
-                <h2 class="text-lg font-medium mb-4">Additional Information</h2>
-                <p class="text-sm text-gray-600 mb-4">
-                    Add about your agency or specific needs that would help us
-                    serve you better (Optional)
-                </p>
-
-                <div class="mb-4">
-                    <textarea
-                        bind:value={additionalInfo}
-                        rows="4"
-                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Type your message here..."
-                    ></textarea>
-                </div>
-
-                <div class="flex justify-end gap-3">
-                    <button
-                        on:click={goBack}
-                        class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        on:click={sendRequest}
-                        class="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-                        disabled={loading}
-                    >
-                        {#if loading}
-                            <span class="inline-block animate-spin mr-2">⟳</span
-                            >
-                        {/if}
-                        Send Request
-                    </button>
-                </div>
-            </div>
-        {/if}
     </div>
 </div>
 
 <style>
-    /* Add any component-specific styles here */
-    button:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
+    .tour-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .breadcrumb {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    .tour-content {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .header-title h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+    }
+
+    .header-address {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .tour-view-container {
+        padding: 0;
+        position: relative;
+    }
+
+    .tour-view {
+        width: 100%;
+        height: 0;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tour-view img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .tour-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .tour-control-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.6);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .tour-control-btn:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .play-btn {
+        background-color: rgba(66, 99, 235, 0.8);
+    }
+
+    .play-btn:hover {
+        background-color: rgba(66, 99, 235, 1);
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .primary-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+    }
+
+    .primary-btn:hover {
+        background-color: #212529;
+    }
+
+    .copy-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+    }
+
+    .copy-btn:hover {
+        background-color: #212529;
+    }
+
+    .secondary-btn {
+        background-color: white;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+
+    .secondary-btn:hover {
+        background-color: #f8f9fa;
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .header-actions {
+            width: 100%;
+        }
     }
 </style>

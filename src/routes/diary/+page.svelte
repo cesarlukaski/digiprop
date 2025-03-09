@@ -6,7 +6,7 @@
     // User data
     let userData = {
         name: "Pathum Bandara",
-        role: "Tech expert",
+        role: "Tech Expert",
     };
 
     // Current date
@@ -14,45 +14,38 @@
     let selectedDate = new Date();
     let selectedMonth = currentDate.getMonth();
     let selectedYear = currentDate.getFullYear();
+    let selectedDay = currentDate.getDate();
+
+    // Formatted today string for display
+    const todayDateString = `${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
 
     // Calendar days
     let calendarDays: Array<{
         day: number;
         isCurrentMonth: boolean;
         date: Date;
+        isToday: boolean;
+        isSelected: boolean;
     }> = [];
 
-    // Events for the selected day
-    let events = [
-        {
-            id: 1,
-            title: "Photo capture",
-            items: [
-                {
-                    time: "8:00 - 10:00 AM",
-                    location: "15 Kelvin Drive, Pontypridd, CF 39L 06",
-                },
-                {
-                    time: "10:30 - 11:30 AM",
-                    location: "15 Court Street, Pontypridd, CF 39L 06",
-                },
-                {
-                    time: "12:00 - 1:00 PM",
-                    location: "15 Court Street, Pontypridd, CF 39L 06",
-                },
-                {
-                    time: "2:30 - 4:00 PM",
-                    location: "15 Court Street, Pontypridd, CF 39L 06",
-                },
-            ],
-        },
-    ];
-
     // Week view days
-    let weekDays: Array<{ day: number; date: Date; isToday: boolean }> = [];
+    let weekDays: Array<{
+        day: number;
+        date: Date;
+        isToday: boolean;
+        dayName: string;
+        monthDate: string;
+    }> = [];
 
     // View mode
     let viewMode: "day" | "week" | "month" | "year" = "week";
+
+    // Scheduled inventory event
+    const scheduledEvent = {
+        day: 22,
+        time: "10:00 AM",
+        title: "Inventory",
+    };
 
     // Helper to format date
     function formatDate(date: Date, format: string): string {
@@ -74,6 +67,12 @@
 
         if (format === "month-year") {
             return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+        } else if (format === "short-month") {
+            return monthNames[date.getMonth()].slice(0, 3);
+        } else if (format === "day-name") {
+            return dayNames[date.getDay()];
+        } else if (format === "dd/mm/yyyy") {
+            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
         }
 
         return "";
@@ -82,10 +81,16 @@
     // Generate calendar days for the month
     function generateCalendarDays(month: number, year: number): void {
         calendarDays = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         // First day of the month
         const firstDay = new Date(year, month, 1);
-        const startingDay = firstDay.getDay(); // 0 = Sunday
+        let startingDayIndex = firstDay.getDay(); // 0 = Sunday
+
+        // Adjust for Monday as first day of week
+        if (startingDayIndex === 0) startingDayIndex = 7;
+        startingDayIndex--;
 
         // Last day of the month
         const lastDay = new Date(year, month + 1, 0);
@@ -95,58 +100,91 @@
         const prevMonthLastDay = new Date(year, month, 0).getDate();
 
         // Fill in previous month days
-        for (let i = startingDay - 1; i >= 0; i--) {
+        for (let i = startingDayIndex - 1; i >= 0; i--) {
             const day = prevMonthLastDay - i;
+            const date = new Date(year, month - 1, day);
             calendarDays.push({
                 day,
                 isCurrentMonth: false,
-                date: new Date(year, month - 1, day),
+                date,
+                isToday: false,
+                isSelected: false,
             });
         }
 
         // Fill in current month days
         for (let day = 1; day <= monthLength; day++) {
+            const date = new Date(year, month, day);
+            const isToday = date.toDateString() === today.toDateString();
+            const isSelected =
+                date.toDateString() === selectedDate.toDateString();
+
             calendarDays.push({
                 day,
                 isCurrentMonth: true,
-                date: new Date(year, month, day),
+                date,
+                isToday,
+                isSelected,
             });
         }
 
-        // Fill in next month days
-        const remainingDays = 42 - calendarDays.length; // 6 rows x 7 days
-        for (let day = 1; day <= remainingDays; day++) {
+        // Fill in next month days to complete the grid
+        const daysNeeded = 42 - calendarDays.length; // 6 rows x 7 days
+        for (let day = 1; day <= daysNeeded; day++) {
+            const date = new Date(year, month + 1, day);
             calendarDays.push({
                 day,
                 isCurrentMonth: false,
-                date: new Date(year, month + 1, day),
+                date,
+                isToday: false,
+                isSelected: false,
             });
         }
     }
 
-    // Generate week view days
+    // Generate week view days starting from Monday
     function generateWeekDays(date: Date): void {
         weekDays = [];
-        const dayOfWeek = date.getDay(); // 0 = Sunday
+        const currentDay = date.getDay(); // 0 = Sunday
+        let dayOffset = currentDay - 1; // For Monday as first day
+        if (dayOffset < 0) dayOffset = 6; // If Sunday, go back 6 days to start from Monday
+
         const startDate = new Date(date);
+        startDate.setDate(date.getDate() - dayOffset);
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Calculate first day of the displayed week (Sunday)
-        startDate.setDate(date.getDate() - dayOfWeek);
-
-        // Generate 7 days
+        // Generate 7 days starting from Monday
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + i);
+            const isToday = currentDate.toDateString() === today.toDateString();
+            const dayName = formatDate(currentDate, "day-name");
+            const monthDate = currentDate.getDate().toString();
 
             weekDays.push({
                 day: currentDate.getDate(),
                 date: currentDate,
-                isToday: currentDate.getTime() === today.getTime(),
+                isToday,
+                dayName,
+                monthDate,
             });
         }
     }
+
+    // Time slots for the weekly view
+    function generateTimeSlots(): string[] {
+        const slots = [];
+        for (let hour = 7; hour <= 17; hour++) {
+            const period = hour >= 12 ? "PM" : "AM";
+            const displayHour = hour > 12 ? hour - 12 : hour;
+            slots.push(`${displayHour} ${period}`);
+        }
+        return slots;
+    }
+
+    const timeSlots = generateTimeSlots();
 
     // Go to previous month
     function prevMonth(): void {
@@ -173,6 +211,7 @@
         selectedDate = new Date();
         selectedMonth = selectedDate.getMonth();
         selectedYear = selectedDate.getFullYear();
+        selectedDay = selectedDate.getDate();
         generateCalendarDays(selectedMonth, selectedYear);
         generateWeekDays(selectedDate);
     }
@@ -180,6 +219,8 @@
     // Select a date
     function selectDate(date: Date): void {
         selectedDate = date;
+        selectedDay = date.getDate();
+        generateCalendarDays(selectedMonth, selectedYear); // Regenerate to update selected status
         generateWeekDays(selectedDate);
     }
 
@@ -204,44 +245,14 @@
         viewMode = mode;
     }
 
-    // Generate time slots for the day view
-    function generateTimeSlots(): Array<string> {
-        const times = [];
-        for (let hour = 7; hour <= 17; hour++) {
-            times.push(`${hour} AM`);
-        }
-        return times;
-    }
-
-    // Scheduled events for the demo
-    const scheduledEvent = {
-        day: 22,
-        time: "10:00 AM",
-        title: "Inventory",
-    };
-
-    // Photo capture events
+    // Photo capture events for today
     const photoCaptureEvents = [
         {
-            time: "8:00 - 10:00 AM",
-            location: "15 Kelvin Drive, Pontypridd, CF 39L 06",
-        },
-        {
-            time: "10:30 - 11:30 AM",
-            location: "15 Court Street, Pontypridd, CF 39L 06",
-        },
-        {
-            time: "12:00 - 1:00 PM",
-            location: "15 Court Street, Pontypridd, CF 39L 06",
-        },
-        {
-            time: "2:30 - 4:00 PM",
-            location: "15 Court Street, Pontypridd, CF 39L 06",
+            time: "10:00 AM",
+            title: "Inventory",
+            location: "15 Court Street, Tonypandy, CF 28L 0B",
         },
     ];
-
-    // Time slots
-    const timeSlots = generateTimeSlots();
 
     // Download diary
     function downloadDiary(): void {
@@ -250,7 +261,7 @@
 
     // Book a project
     function bookProject(): void {
-        goto("/properties/new");
+        goto("/booking");
     }
 
     onMount(() => {
@@ -267,178 +278,105 @@
     });
 </script>
 
-<div class="flex flex-col h-full bg-white">
-    <!-- Header with actions -->
-    <div
-        class="flex justify-between items-center p-4 border-b border-gray-200 shadow-sm"
-    >
-        <h1 class="text-xl font-medium text-gray-900">Diary</h1>
-        <div class="flex items-center gap-4">
-            <button on:click={bookProject} class="btn btn-outline">
-                Book A Project
-            </button>
-            <button
-                on:click={downloadDiary}
-                class="btn btn-black flex items-center"
+<div class="diary-container">
+    <div class="diary-header">
+        <h1>Diary</h1>
+        <div class="diary-actions">
+            <button class="book-project-btn" on:click={bookProject}
+                >Book A Project</button
             >
-                Download Diary
-            </button>
+            <button class="download-diary-btn" on:click={downloadDiary}
+                >Download Diary</button
+            >
 
-            <!-- Notification and Message icons -->
-            <div class="flex items-center gap-4 ml-4">
-                <!-- Notifications -->
-                <button class="text-gray-600 hover:text-gray-800">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"
-                        />
-                    </svg>
-                </button>
-
-                <!-- Messages -->
-                <button class="text-gray-600 hover:text-gray-800">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"
-                        />
-                        <path
-                            d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"
-                        />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- User profile -->
-            <div class="flex items-center ml-4">
-                <div class="text-right mr-2">
-                    <div class="text-sm font-medium text-gray-900">
-                        {userData.name}
+            <div class="user-info">
+                <div class="user-avatar">
+                    <div class="avatar-placeholder">
+                        {userData.name.charAt(0)}
                     </div>
-                    <div class="text-xs text-gray-500">{userData.role}</div>
                 </div>
-                <div
-                    class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            fill-rule="evenodd"
-                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                            clip-rule="evenodd"
-                        />
-                    </svg>
+                <div class="user-details">
+                    <span class="user-name">{userData.name}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Diary content -->
-    <div class="flex flex-1 border-t border-gray-200 overflow-hidden">
+    <div class="diary-content">
         <!-- Left panel - Calendar -->
-        <div
-            class="w-1/3 border-r border-gray-200 flex flex-col overflow-y-auto"
-        >
-            <div class="p-4">
+        <div class="calendar-panel">
                 <!-- Calendar navigation -->
-                <div class="flex justify-between items-center mb-4">
-                    <button
-                        on:click={prevMonth}
-                        class="p-2 text-gray-500 hover:text-gray-700"
-                    >
+            <div class="calendar-header">
+                <div class="calendar-title-container">
+                    <button class="calendar-nav-btn" on:click={prevMonth}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4"
-                            fill="none"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
+                            fill="none"
                             stroke="currentColor"
-                        >
-                            <path
+                            stroke-width="2"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 19l-7-7 7-7"
-                            />
+                        >
+                            <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                     </button>
-                    <h2 class="text-base font-medium text-gray-900">
+                    <h2 class="calendar-title">
                         {formatDate(
                             new Date(selectedYear, selectedMonth),
                             "month-year",
                         )}
                     </h2>
-                    <button
-                        on:click={nextMonth}
-                        class="p-2 text-gray-500 hover:text-gray-700"
-                    >
+                    <button class="calendar-nav-btn" on:click={nextMonth}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4"
-                            fill="none"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
+                            fill="none"
                             stroke="currentColor"
-                        >
-                            <path
+                            stroke-width="2"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
+                        >
+                            <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
                 </div>
 
-                <!-- Selected date -->
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <p class="text-sm text-gray-700">Jan 12, 2024</p>
+                <div class="calendar-date-info">
+                    <div class="selected-date">
+                        Jan {selectedDay}, {selectedYear}
                     </div>
-                    <button
-                        on:click={goToToday}
-                        class="btn btn-outline text-sm py-1 px-3"
+                    <button class="today-btn" on:click={goToToday}>Today</button
                     >
-                        Today
-                    </button>
+                </div>
                 </div>
 
                 <!-- Calendar grid -->
-                <div class="mb-6">
+            <div class="calendar-grid">
                     <!-- Day headers -->
-                    <div class="grid grid-cols-7 text-center mb-2">
-                        <div class="text-xs font-medium text-gray-500">Mo</div>
-                        <div class="text-xs font-medium text-gray-500">Tu</div>
-                        <div class="text-xs font-medium text-gray-500">We</div>
-                        <div class="text-xs font-medium text-gray-500">Th</div>
-                        <div class="text-xs font-medium text-gray-500">Fr</div>
-                        <div class="text-xs font-medium text-gray-500">Sa</div>
-                        <div class="text-xs font-medium text-gray-500">Su</div>
+                <div class="calendar-days-header">
+                    <div class="day-header">Mo</div>
+                    <div class="day-header">Tu</div>
+                    <div class="day-header">We</div>
+                    <div class="day-header">Th</div>
+                    <div class="day-header">Fr</div>
+                    <div class="day-header">Sa</div>
+                    <div class="day-header">Su</div>
                     </div>
 
                     <!-- Calendar days -->
-                    <div class="grid grid-cols-7 gap-1">
-                        {#each calendarDays as { day, isCurrentMonth, date }, i}
+                <div class="calendar-days">
+                    {#each calendarDays as { day, isCurrentMonth, date, isToday, isSelected }}
                             <button
                                 class="calendar-day {isCurrentMonth
                                     ? 'current-month'
                                     : 'other-month'} 
-                                    {day === 12 ? 'selected' : ''} 
-                                    {day === new Date().getDate() &&
-                                date.getMonth() === new Date().getMonth() &&
-                                date.getFullYear() === new Date().getFullYear()
-                                    ? 'today'
+                                  {isToday ? 'today' : ''} {isSelected
+                                ? 'selected'
                                     : ''}"
                                 on:click={() => selectDate(date)}
                             >
@@ -449,409 +387,562 @@
                 </div>
 
                 <!-- Today's events -->
-                <div class="mb-6">
-                    <h3
-                        class="text-xs font-medium uppercase text-gray-500 mb-2"
-                    >
-                        TODAY
-                    </h3>
+            <div class="today-events">
+                <h3 class="today-label">TODAY {todayDateString}</h3>
 
-                    <div class="today-event-list">
-                        <h4 class="today-event-title">Photo capture</h4>
-
-                        <ul class="space-y-3">
-                            {#each events[0].items as item}
-                                <li class="today-event-item">
-                                    <div class="today-event-time">
-                                        {item.time}
-                                    </div>
-                                    <div class="today-event-location">
-                                        {item.location}
-                                    </div>
-                                </li>
-                            {/each}
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Today's Schedule View -->
-                <div>
-                    <h3 class="font-medium text-base mb-2 text-gray-900">
-                        TODAY 1/27/2021
-                    </h3>
-                    <div class="border-t border-gray-200">
-                        <h4 class="schedule-section-title">Photo capture</h4>
+                <div class="event-group">
+                    <h4 class="event-group-title">Photo Capture</h4>
+                    <ul class="event-list">
                         {#each photoCaptureEvents as event}
-                            <div class="schedule-item">
-                                <div class="flex items-start">
-                                    <div class="schedule-item-bullet"></div>
-                                    <div>
-                                        <div class="schedule-item-time">
-                                            {event.time}
+                            <li class="event-item">
+                                <div class="event-marker"></div>
+                                <div class="event-details">
+                                    <div class="event-time">
+                                        {event.time} - {event.title}
                                         </div>
-                                        <div class="schedule-item-location">
+                                    <div class="event-location">
                                             {event.location}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                            </li>
                         {/each}
-                    </div>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Right panel - Day/Week view -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- View controls -->
-            <div
-                class="flex justify-between items-center p-4 border-b border-gray-200"
-            >
+        <!-- Right panel - Week view -->
+        <div class="week-panel">
                 <!-- Week navigation -->
-                <div class="flex items-center gap-2">
-                    <button
-                        on:click={prevWeek}
-                        class="p-1 text-gray-500 hover:text-gray-700"
-                    >
+            <div class="week-navigation">
+                <div class="week-nav-controls">
+                    <button class="week-nav-btn" on:click={prevWeek}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4"
-                            fill="none"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
+                            fill="none"
                             stroke="currentColor"
-                        >
-                            <path
+                            stroke-width="2"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 19l-7-7 7-7"
-                            />
+                        >
+                            <polyline points="15 18 9 12 15 6"></polyline>
                         </svg>
                     </button>
-                    <button
-                        on:click={goToToday}
-                        class="btn btn-outline text-xs py-1 px-3">Today</button
+                    <button class="today-btn small" on:click={goToToday}
+                        >Today</button
                     >
-                    <button
-                        on:click={nextWeek}
-                        class="p-1 text-gray-500 hover:text-gray-700"
-                    >
+                    <button class="week-nav-btn" on:click={nextWeek}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            class="h-4 w-4"
-                            fill="none"
+                            width="16"
+                            height="16"
                             viewBox="0 0 24 24"
+                            fill="none"
                             stroke="currentColor"
-                        >
-                            <path
+                            stroke-width="2"
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
+                        >
+                            <polyline points="9 18 15 12 9 6"></polyline>
                         </svg>
                     </button>
                 </div>
 
-                <!-- View switcher -->
-                <div class="view-toggle">
+                <div class="view-selector">
                     <button
-                        class="view-toggle-button {viewMode === 'day'
-                            ? 'active'
-                            : ''}"
-                        on:click={() => setViewMode("day")}
+                        class="view-btn {viewMode === 'day' ? 'active' : ''}"
+                        on:click={() => setViewMode("day")}>Day</button
                     >
-                        Day
-                    </button>
                     <button
-                        class="view-toggle-button {viewMode === 'week'
-                            ? 'active'
-                            : ''}"
-                        on:click={() => setViewMode("week")}
+                        class="view-btn {viewMode === 'week' ? 'active' : ''}"
+                        on:click={() => setViewMode("week")}>Week</button
                     >
-                        Week
-                    </button>
                     <button
-                        class="view-toggle-button {viewMode === 'month'
-                            ? 'active'
-                            : ''}"
-                        on:click={() => setViewMode("month")}
+                        class="view-btn {viewMode === 'month' ? 'active' : ''}"
+                        on:click={() => setViewMode("month")}>Month</button
                     >
-                        Month
-                    </button>
                     <button
-                        class="view-toggle-button {viewMode === 'year'
-                            ? 'active'
-                            : ''}"
-                        on:click={() => setViewMode("year")}
+                        class="view-btn {viewMode === 'year' ? 'active' : ''}"
+                        on:click={() => setViewMode("year")}>Year</button
                     >
-                        Year
-                    </button>
                 </div>
             </div>
 
             <!-- Week header -->
-            <div class="grid grid-cols-7 border-b border-gray-200">
-                {#each weekDays as { day, date, isToday }}
-                    <div class="week-day-header {isToday ? 'today' : ''}">
-                        <div class="week-day-name">
-                            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
-                                date.getDay()
-                            ]}
-                        </div>
-                        <div class="week-day-number {isToday ? 'today' : ''}">
+            <div class="week-header">
+                <div class="time-column-header"></div>
+                {#each weekDays as { dayName, day, isToday }}
+                    <div class="day-column-header {isToday ? 'today' : ''}">
+                        <div class="day-name">{dayName}</div>
+                        <div class="day-number {isToday ? 'today' : ''}">
                             {day}
                         </div>
                     </div>
                 {/each}
             </div>
 
-            <!-- Time grid -->
-            <div class="flex-1 overflow-y-auto">
-                <div class="grid grid-cols-7 relative min-h-full">
-                    {#each weekDays as { date, isToday }, dayIndex}
-                        <div class="time-column {isToday ? 'today' : ''}">
-                            {#each timeSlots as time, i}
-                                <div class="time-slot">
-                                    {#if dayIndex === 0}
-                                        <span>{time}</span>
-                                    {/if}
+            <!-- Week grid -->
+            <div class="week-grid">
+                <div class="time-column">
+                    {#each timeSlots as time}
+                        <div class="time-label">{time}</div>
+                    {/each}
+                </div>
 
-                                    {#if date.getDate() === scheduledEvent.day && time === scheduledEvent.time}
-                                        <div class="event-pill">
-                                            <div class="event-pill-title">
-                                                {scheduledEvent.title}
-                                            </div>
+                    {#each weekDays as { date, isToday }, dayIndex}
+                    <div class="day-column {isToday ? 'today' : ''}">
+                        {#each timeSlots as time, timeIndex}
+                                <div class="time-slot">
+                                {#if date.getDate() === 22 && time === "10 AM"}
+                                    <div class="event-card">
+                                        <div class="event-title">Inventory</div>
                                         </div>
                                     {/if}
                                 </div>
                             {/each}
                         </div>
                     {/each}
-                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    :global(body) {
-        background-color: #f5f7fa;
+    .diary-container {
+        width: 100%;
+        min-height: calc(100vh - 40px);
+        background-color: #f8f9fa;
+        padding: 20px;
     }
 
-    /* Calendar day styling */
-    .calendar-day {
-        height: 2.25rem;
-        width: 2.25rem;
+    .diary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .diary-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+
+    .diary-actions {
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        transition: all 0.2s;
+        gap: 16px;
     }
 
-    .calendar-day:hover {
-        background-color: #f3f4f6;
-    }
-
-    .calendar-day.current-month {
-        color: #1f2937;
-    }
-
-    .calendar-day.other-month {
-        color: #9ca3af;
-    }
-
-    .calendar-day.selected {
-        background-color: #111827;
-        color: white;
-    }
-
-    .calendar-day.today:not(.selected) {
-        border: 1px solid #d1d5db;
-    }
-
-    /* Week view styling */
-    .week-day-header {
-        padding: 0.5rem;
-        text-align: center;
-        border-right: 1px solid #e5e7eb;
-    }
-
-    .week-day-header:last-child {
-        border-right: none;
-    }
-
-    .week-day-header.today {
-        background-color: #eff6ff;
-    }
-
-    .week-day-name {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        color: #6b7280;
+    .book-project-btn,
+    .download-diary-btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
         font-weight: 500;
+        cursor: pointer;
     }
 
-    .week-day-number {
-        font-size: 1.25rem;
-        font-weight: 500;
+    .book-project-btn {
+        background-color: #fff;
+        color: #333;
+        border: 1px solid #dee2e6;
     }
 
-    .week-day-number.today {
-        color: #2563eb;
+    .download-diary-btn {
+        background-color: #000;
+        color: #fff;
+        border: none;
     }
 
-    /* Time slot styling */
-    .time-slot {
-        height: 3rem;
-        border-bottom: 1px solid #e5e7eb;
-        font-size: 0.75rem;
-        color: #6b7280;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
+    .user-info {
         display: flex;
         align-items: center;
+        gap: 8px;
     }
 
-    .time-column {
-        border-right: 1px solid #e5e7eb;
-        position: relative;
-    }
-
-    .time-column.today {
-        background-color: #eff6ff;
-    }
-
-    .time-column:last-child {
-        border-right: none;
-    }
-
-    /* Event styling */
-    .event-pill {
-        position: absolute;
-        left: 0;
-        right: 0;
-        margin-left: 0.25rem;
-        margin-right: 0.25rem;
-        background-color: #dbeafe;
-        padding: 0.5rem;
-        font-size: 0.75rem;
-        z-index: 10;
-    }
-
-    .event-pill-title {
-        font-weight: 500;
-        color: #1e40af;
-    }
-
-    /* Today's events list styling */
-    .today-event-list {
-        background-color: #f3f4f6;
-        border-radius: 0.375rem;
-        padding: 0.75rem;
-    }
-
-    .today-event-title {
-        font-weight: 500;
-        margin-bottom: 0.5rem;
-    }
-
-    .today-event-item {
-        margin-bottom: 0.75rem;
-    }
-
-    .today-event-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .today-event-time {
-        font-weight: 500;
-        font-size: 0.875rem;
-    }
-
-    .today-event-location {
-        color: #6b7280;
-        font-size: 0.75rem;
-    }
-
-    /* Schedule list styling */
-    .schedule-section-title {
-        font-weight: 500;
-        font-size: 0.875rem;
-        padding: 0.5rem;
-        background-color: #111827;
-        color: white;
-    }
-
-    .schedule-item {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .schedule-item-bullet {
-        width: 0.375rem;
-        height: 0.375rem;
-        border-radius: 9999px;
-        background-color: #111827;
-        margin-top: 0.375rem;
-        margin-right: 0.5rem;
-    }
-
-    .schedule-item-time {
-        font-weight: 500;
-        font-size: 0.875rem;
-    }
-
-    .schedule-item-location {
-        color: #6b7280;
-        font-size: 0.75rem;
-    }
-
-    /* Button styling */
-    .btn {
-        padding: 0.5rem 1rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-
-    .btn-outline {
-        background-color: white;
-        border: 1px solid #d1d5db;
-    }
-
-    .btn-outline:hover {
-        background-color: #f9fafb;
-    }
-
-    .btn-black {
-        background-color: #111827;
-        color: white;
-    }
-
-    .btn-black:hover {
-        background-color: #374151;
-    }
-
-    /* View mode toggle */
-    .view-toggle {
-        display: flex;
-        border: 1px solid #d1d5db;
-        border-radius: 0.25rem;
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
         overflow: hidden;
     }
 
-    .view-toggle-button {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-        background-color: white;
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background-color: #4263eb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
     }
 
-    .view-toggle-button.active {
-        background-color: #111827;
-        color: white;
+    .user-name {
+        font-weight: 500;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .diary-content {
+        display: flex;
+        gap: 20px;
+        height: calc(100vh - 100px);
+    }
+
+    /* Calendar Panel */
+    .calendar-panel {
+        width: 380px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .calendar-header {
+        padding: 16px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .calendar-title-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .calendar-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .calendar-nav-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .calendar-date-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .selected-date {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .today-btn {
+        background: none;
+        border: none;
+        color: #4263eb;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 4px 8px;
+        font-size: 14px;
+    }
+
+    .today-btn.small {
+        font-size: 12px;
+    }
+
+    .calendar-grid {
+        padding: 16px;
+    }
+
+    .calendar-days-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .day-header {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6c757d;
+        padding: 4px;
+    }
+
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+
+    .calendar-day {
+        width: 100%;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: none;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    .calendar-day.current-month {
+        color: #333;
+    }
+
+    .calendar-day.other-month {
+        color: #adb5bd;
+    }
+
+    .calendar-day.today {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+
+    .calendar-day.selected {
+        background-color: #000;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .calendar-day:hover:not(.selected) {
+        background-color: #f8f9fa;
+    }
+
+    /* Today's events */
+    .today-events {
+        padding: 16px;
+        flex: 1;
+        overflow-y: auto;
+        border-top: 1px solid #f1f3f5;
+    }
+
+    .today-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6c757d;
+        margin: 0 0 16px 0;
+    }
+
+    .event-group {
+        margin-bottom: 16px;
+    }
+
+    .event-group-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #000;
+        background-color: #000;
+        color: #fff;
+        padding: 8px;
+        margin: 0 0 8px 0;
+    }
+
+    .event-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .event-item {
+        display: flex;
+        margin-bottom: 8px;
+        padding: 0 8px;
+    }
+
+    .event-marker {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #000;
+        margin-top: 6px;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
+    .event-details {
+        flex: 1;
+    }
+
+    .event-time {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .event-location {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    /* Week Panel */
+    .week-panel {
+        flex: 1;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .week-navigation {
+        padding: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .week-nav-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .week-nav-btn {
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .view-selector {
+        display: flex;
+        align-items: center;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 4px;
+    }
+
+    .view-btn {
+        background: none;
+        border: none;
+        padding: 6px 12px;
+        font-size: 12px;
+        color: #6c757d;
+        cursor: pointer;
+        border-radius: 2px;
+    }
+
+    .view-btn.active {
+        background-color: #fff;
+        color: #000;
+        font-weight: 500;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Week header */
+    .week-header {
+        display: grid;
+        grid-template-columns: 60px repeat(7, 1fr);
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .time-column-header {
+        border-right: 1px solid #f1f3f5;
+    }
+
+    .day-column-header {
+        padding: 10px;
+        text-align: center;
+        border-right: 1px solid #f1f3f5;
+    }
+
+    .day-column-header:last-child {
+        border-right: none;
+    }
+
+    .day-column-header.today {
+        background-color: #f8f9fa;
+    }
+
+    .day-name {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    .day-number {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .day-number.today {
+        color: #000;
+    }
+
+    /* Week grid */
+    .week-grid {
+        display: grid;
+        grid-template-columns: 60px repeat(7, 1fr);
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .time-column {
+        border-right: 1px solid #f1f3f5;
+    }
+
+    .time-label {
+        height: 60px;
+        padding: 4px 8px;
+        font-size: 12px;
+        color: #6c757d;
+        text-align: right;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .day-column {
+        border-right: 1px solid #f1f3f5;
+    }
+
+    .day-column:last-child {
+        border-right: none;
+    }
+
+    .day-column.today {
+        background-color: #f8f9fa;
+    }
+
+    .time-slot {
+        height: 60px;
+        border-bottom: 1px solid #f1f3f5;
+        position: relative;
+    }
+
+    .event-card {
+        position: absolute;
+        left: 4px;
+        right: 4px;
+        top: 4px;
+        height: 52px;
+        background-color: rgba(66, 99, 235, 0.1);
+        border-radius: 4px;
+        padding: 4px 8px;
+        cursor: pointer;
+    }
+
+    .event-title {
+        font-size: 12px;
+        font-weight: 500;
+        color: #4263eb;
     }
 </style>

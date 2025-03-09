@@ -168,7 +168,7 @@
             // For now, we'll just simulate a delay and redirect
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            // Redirect to next step (ID verification)
+            // Redirect to next step (Fit to Work)
             goto("/register/fit-to-work");
         } catch (err) {
             error =

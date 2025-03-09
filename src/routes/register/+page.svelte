@@ -3,7 +3,7 @@
     import { goto } from "$app/navigation";
     import { api, authStore } from "$lib/api";
 
-    let name = "";
+    let fullName = "";
     let email = "";
     let password = "";
     let confirmPassword = "";
@@ -21,9 +21,23 @@
         }
     });
 
+    // Switch between client and partner registration
+    function setUserType(type: "client" | "partner") {
+        userType = type;
+    }
+
+    // Toggle password visibility
+    function togglePasswordVisibility() {
+        showPassword = !showPassword;
+    }
+
+    function toggleConfirmPasswordVisibility() {
+        showConfirmPassword = !showConfirmPassword;
+    }
+
     // Handle registration form submission
     async function handleRegister() {
-        if (!name || !email || !password || !confirmPassword) {
+        if (!fullName || !email || !password || !confirmPassword) {
             error = "Please fill in all fields";
             return;
         }
@@ -37,8 +51,14 @@
         error = "";
 
         try {
-            await api.register(name, email, password, userType);
-            goto("/register/personal-details");
+            // Register the user
+            const result = await api.register(fullName, email, password, userType);
+            
+            // Set the authentication
+            authStore.setAuth(result.user, result.token);
+            
+            // Redirect to expertise page
+            goto("/register/expertise");
         } catch (err: unknown) {
             error =
                 err instanceof Error
@@ -48,266 +68,368 @@
         }
     }
 
-    // Toggle password visibility
-    function togglePasswordVisibility() {
-        showPassword = !showPassword;
-    }
-
-    // Toggle confirm password visibility
-    function toggleConfirmPasswordVisibility() {
-        showConfirmPassword = !showConfirmPassword;
-    }
-
     // Navigate to login page
     function goToLogin() {
         goto("/login");
     }
 </script>
 
-<div
-    class="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4"
->
-    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <!-- Logo -->
-        <div class="flex items-center justify-center mb-8">
-            <div class="flex items-center">
-                <div class="mr-2">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-black"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
-                        />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold uppercase">DIGIPROP</h1>
-                    <p class="text-xs text-gray-500">
-                        Digital Property Solutions
-                    </p>
-                </div>
-            </div>
+<div class="register-container">
+    <div class="register-form">
+        <div class="logo">
+            <img src="/digiprop-logo.svg" alt="DigiProp Logo" />
+            <span>Digiprop</span>
         </div>
 
-        <!-- Welcome text -->
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-medium mb-1">Create an account</h2>
-            <p class="text-gray-600">Join DIGIPROP today</p>
-        </div>
-
-        <!-- Registration form -->
-        <form on:submit|preventDefault={handleRegister} class="space-y-4">
-            {#if error}
-                <div class="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                    {error}
-                </div>
-            {/if}
-
-            <!-- Name input -->
-            <div>
-                <input
-                    type="text"
-                    placeholder="Full Name"
-                    bind:value={name}
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                />
-            </div>
-
-            <!-- Email input -->
-            <div>
-                <input
-                    type="email"
-                    placeholder="Email Address"
-                    bind:value={email}
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                />
-            </div>
-
-            <!-- Password input -->
-            <div class="relative">
-                <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    bind:value={password}
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                />
-                <button
-                    type="button"
-                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    on:click={togglePasswordVisibility}
-                >
-                    {#if showPassword}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                                clip-rule="evenodd"
-                            />
-                            <path
-                                d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"
-                            />
-                        </svg>
-                    {:else}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                            <path
-                                fill-rule="evenodd"
-                                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
-                    {/if}
-                </button>
-            </div>
-
-            <!-- Confirm Password input -->
-            <div class="relative">
-                <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm Password"
-                    bind:value={confirmPassword}
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                />
-                <button
-                    type="button"
-                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    on:click={toggleConfirmPasswordVisibility}
-                >
-                    {#if showConfirmPassword}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                                clip-rule="evenodd"
-                            />
-                            <path
-                                d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"
-                            />
-                        </svg>
-                    {:else}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                            <path
-                                fill-rule="evenodd"
-                                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
-                    {/if}
-                </button>
-            </div>
-
-            <!-- User type selection -->
-            <div class="flex space-x-4">
-                <label class="flex items-center">
-                    <input
-                        type="radio"
-                        name="userType"
-                        value="client"
-                        bind:group={userType}
-                        class="h-4 w-4 text-black border-gray-300 focus:ring-0"
-                    />
-                    <span class="ml-2 text-sm text-gray-700">Client</span>
-                </label>
-                <label class="flex items-center">
-                    <input
-                        type="radio"
-                        name="userType"
-                        value="partner"
-                        bind:group={userType}
-                        class="h-4 w-4 text-black border-gray-300 focus:ring-0"
-                    />
-                    <span class="ml-2 text-sm text-gray-700">Partner</span>
-                </label>
-            </div>
-
-            <!-- Register button -->
+        <div class="user-type-toggle">
             <button
-                type="submit"
-                class="w-full bg-black text-white p-3 rounded font-medium hover:bg-gray-900 transition-colors"
-                disabled={loading}
+                class="toggle-btn"
+                class:active={userType === "client"}
+                on:click={() => setUserType("client")}
             >
+                Register as Client
+            </button>
+            <button
+                class="toggle-btn"
+                class:active={userType === "partner"}
+                on:click={() => setUserType("partner")}
+            >
+                Register as Partner
+            </button>
+        </div>
+
+        <h1>Create your account</h1>
+
+        {#if error}
+            <div class="error-message">
+                {error}
+            </div>
+        {/if}
+
+        <form on:submit|preventDefault={handleRegister}>
+            <div class="form-group">
+                <input
+                    id="fullName"
+                    type="text"
+                    placeholder={userType === "client"
+                        ? "Organization name"
+                        : "Full name"}
+                    bind:value={fullName}
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    bind:value={email}
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <div class="password-input-container">
+                    <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        bind:value={password}
+                        required
+                    />
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        on:click={togglePasswordVisibility}
+                    >
+                        {#if showPassword}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                ></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        {:else}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                ></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        {/if}
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="password-input-container">
+                    <input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Repeat password"
+                        bind:value={confirmPassword}
+                        required
+                    />
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        on:click={toggleConfirmPasswordVisibility}
+                    >
+                        {#if showConfirmPassword}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                ></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        {:else}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                ></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        {/if}
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="register-btn" disabled={loading}>
                 {#if loading}
-                    <span class="inline-block animate-spin mr-2">⟳</span>
+                    <span class="loading-icon">⟳</span>
                 {/if}
-                Create Account
+                Register
             </button>
         </form>
 
-        <!-- Login link -->
-        <div class="mt-8 text-center">
-            <span class="text-sm text-gray-600">Already have an account?</span>
-            <button
-                class="text-sm text-blue-600 font-medium ml-1 hover:text-blue-800"
-                on:click={goToLogin}
-            >
-                Log In
-            </button>
+        <div class="login-link">
+            <span>I have an Account?</span>
+            <button class="text-btn" on:click={goToLogin}>Login</button>
         </div>
     </div>
 </div>
 
 <style>
-    /* Add any custom styles here */
-    button:disabled {
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+
+    .register-form {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 32px;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .logo img {
+        height: 32px;
+        margin-right: 8px;
+    }
+
+    .logo span {
+        font-weight: 700;
+        font-size: 18px;
+        color: #333;
+        letter-spacing: 0.5px;
+    }
+
+    .user-type-toggle {
+        display: flex;
+        margin-bottom: 24px;
+        border-radius: 8px;
+        background-color: #f1f5f9;
+        padding: 4px;
+        width: 100%;
+    }
+
+    .toggle-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s;
+        color: #64748b;
+    }
+
+    .toggle-btn.active {
+        background-color: white;
+        color: #333;
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0 0 24px 0;
+    }
+
+    .error-message {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        outline: none;
+    }
+
+    .password-input-container {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .password-toggle:hover {
+        color: #64748b;
+    }
+
+    .register-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background-color 0.2s;
+    }
+
+    .register-btn:hover {
+        background-color: #333;
+    }
+
+    .register-btn:disabled {
         opacity: 0.7;
         cursor: not-allowed;
     }
 
-    /* Custom radio button styling */
-    input[type="radio"] {
-        appearance: none;
-        -webkit-appearance: none;
-        height: 16px;
-        width: 16px;
-        background-color: #fff;
-        border: 1px solid #d1d5db;
-        border-radius: 50%;
+    .loading-icon {
+        display: inline-block;
+        margin-right: 8px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .login-link {
+        text-align: center;
+        font-size: 14px;
+        margin-top: 24px;
+    }
+
+    .login-link span {
+        color: #64748b;
+    }
+
+    .login-link button {
+        background: none;
+        border: none;
+        color: #3b82f6;
+        font-weight: 500;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        padding: 0;
+        margin-left: 4px;
     }
 
-    input[type="radio"]:checked {
-        background-color: #000;
-        border-color: #000;
-    }
-
-    input[type="radio"]:checked::after {
-        content: "";
-        display: block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background-color: white;
-    }
-
-    input[type="radio"]:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    .login-link button:hover {
+        text-decoration: underline;
+        color: #2563eb;
     }
 </style>

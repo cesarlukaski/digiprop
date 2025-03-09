@@ -94,10 +94,10 @@ export const api = {
     async register(email: string, name: string, password: string, userType: 'client' | 'partner'): Promise<{ user: User, token: string }> {
         await delay(700); // Simulate API delay
 
-        // Check if user already exists
-        if (mockUsers.some(u => u.email === email)) {
-            throw new Error('Email already in use');
-        }
+        // disable email check for now
+        // if (mockUsers.some(u => u.email === email)) {
+        //     throw new Error('Email already in use');
+        // }
 
         // Create new user
         const newUser: User = {
@@ -144,8 +144,22 @@ export const authStore = {
             const storedUser = localStorage.getItem('digiprop_user');
             const storedToken = localStorage.getItem('digiprop_token');
 
-            if (storedUser && storedToken) {
-                this.user = JSON.parse(storedUser);
+            if (storedToken) {
+                // If we have a token but no user data, create a default user
+                if (!storedUser) {
+                    const defaultUser: User = {
+                        id: '1',
+                        email: 'user@example.com',
+                        name: 'Aktons',
+                        userType: 'client'
+                    };
+
+                    this.user = defaultUser;
+                    localStorage.setItem('digiprop_user', JSON.stringify(defaultUser));
+                } else {
+                    this.user = JSON.parse(storedUser);
+                }
+
                 this.token = storedToken;
             }
         } catch (error) {

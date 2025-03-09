@@ -37,10 +37,10 @@
     const sampleProperty: PropertyDetail = {
         id: "1",
         address: "78 Court Street",
-        fullAddress: "78 Court Street Tonypandy, CF 2RL 0B",
+        fullAddress: "78 Court Street, Tonypandy, CF 28L 0B",
         client: "Aktons",
         paymentStatus: "Completed",
-        type: "Directory",
+        type: "Inventory",
         deadline: "2024 / 03 / 29",
         virtualTour: {
             available: true,
@@ -48,7 +48,7 @@
         },
         photos2D: {
             available: true,
-            count: 12,
+            count: 20,
         },
         floorplans: {
             available: true,
@@ -89,10 +89,8 @@
     }
 
     function viewTour() {
-        // Open virtual tour in a new tab
-        if (property?.virtualTour.url) {
-            window.open(property.virtualTour.url, "_blank");
-        }
+        // Navigate to virtual tour page
+        goto(`/properties/${propertyId}/virtual-tour`);
     }
 
     function copyTourLink() {
@@ -104,8 +102,8 @@
     }
 
     function viewImages() {
-        // Navigate to 2D images page
-        goto(`/properties/${propertyId}/images`);
+        // Navigate to photos/2D images page
+        goto(`/properties/${propertyId}/photos`);
     }
 
     function downloadImages() {
@@ -124,8 +122,8 @@
     }
 
     function viewReport() {
-        // Navigate to report page
-        goto(`/properties/${propertyId}/report`);
+        // Navigate to inventory report page
+        goto(`/properties/${propertyId}/inventory`);
     }
 
     function downloadReport() {
@@ -134,240 +132,459 @@
     }
 </script>
 
-<div class="p-6 bg-white">
+<div class="property-details-container">
     {#if loading}
-        <div class="flex justify-center items-center h-64">
-            <div
-                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
-            ></div>
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
         </div>
     {:else if error}
-        <div
-            class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"
-        >
+        <div class="error-message">
             <p>{error}</p>
         </div>
     {:else if property}
+        <div class="breadcrumb">
+            <p>Dashboard / Client</p>
+        </div>
+
         <!-- Header with Project Overview -->
-        <div class="flex justify-between items-start mb-8">
-            <div>
-                <h1 class="text-xl font-semibold">Project Overview</h1>
-                <p class="text-sm text-gray-500">
-                    View project details and deliverables
-                </p>
+        <div class="project-header">
+            <div class="project-title">
+                <h1>Project Overview</h1>
+                <p class="subtitle">View project details and deliverables</p>
             </div>
-            <div class="flex items-center">
-                <span class="mr-2 text-sm">{property.client}</span>
-                <div
-                    class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            fill-rule="evenodd"
-                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                            clip-rule="evenodd"
-                        />
-                    </svg>
+            <div class="client-info">
+                <span class="client-name">{property.client}</span>
+                <div class="client-avatar">
+                    <div class="avatar-placeholder">
+                        {property.client.charAt(0)}
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Main content sections -->
+        <div class="property-content">
         <!-- Property Address Section -->
-        <div class="mb-8">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-base font-medium mb-2">Address</h2>
-                    <p class="text-sm text-gray-700">{property.fullAddress}</p>
+            <div class="address-section">
+                <div class="section-header">
+                    <h2>Address</h2>
+                    <p>{property.fullAddress}</p>
                 </div>
-                <button
-                    on:click={viewTour}
-                    class="bg-black text-white px-4 py-2 rounded text-sm"
+                <button class="view-tour-btn" on:click={viewTour}
+                    >View Tour</button
                 >
-                    View Tour
-                </button>
-            </div>
         </div>
 
         <!-- Property Info Section -->
-        <div class="grid grid-cols-3 gap-8 mb-10">
-            <div>
-                <h3 class="text-sm font-medium text-gray-500 mb-1">
-                    Payment status
-                </h3>
-                <p class="text-sm font-medium text-green-600">
-                    {property.paymentStatus}
-                </p>
+            <div class="property-info-grid">
+                <div class="info-card">
+                <h3>Payment status</h3>
+                    <p class="status-value">{property.paymentStatus}</p>
             </div>
-            <div>
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Type</h3>
-                <p class="text-sm">{property.type}</p>
+                <div class="info-card">
+                <h3>Type</h3>
+                    <p class="type-value">{property.type}</p>
             </div>
-            <div>
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Deadline</h3>
-                <p class="text-sm">{property.deadline}</p>
+                <div class="info-card">
+                <h3>Deadline</h3>
+                    <p class="deadline-value">{property.deadline}</p>
             </div>
         </div>
 
+            <!-- Deliverables Sections -->
+            <div class="deliverables-section">
         <!-- Virtual Tour Section -->
-        <div
-            class="flex justify-between items-center py-4 border-b border-gray-200"
-        >
-            <h3 class="text-base font-medium">Virtual Tour</h3>
-            <div class="flex gap-2">
-                <button
-                    on:click={viewTour}
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm"
-                >
-                    Watch Preview
-                </button>
-                <button
-                    on:click={copyTourLink}
-                    class="bg-black text-white px-4 py-2 rounded text-sm flex items-center"
-                >
+                <div class="deliverable-card">
+            <h3>Virtual Tour</h3>
+                    <div class="action-buttons">
+                        <button
+                            class="action-btn preview-btn"
+                            on:click={viewTour}>Watch Preview</button
+                        >
+                        <button
+                            class="action-btn copy-btn"
+                            on:click={copyTourLink}
+                        >
                     Copy
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 ml-1"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect
+                                    x="9"
+                                    y="9"
+                                    width="13"
+                                    height="13"
+                                    rx="2"
+                                    ry="2"
+                                ></rect>
                         <path
-                            d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"
-                        />
-                        <path
-                            d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"
-                        />
+                                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                ></path>
                     </svg>
                 </button>
             </div>
         </div>
 
         <!-- 2D Photo Enhancement Section -->
-        <div
-            class="flex justify-between items-center py-4 border-b border-gray-200"
-        >
-            <h3 class="text-base font-medium">2D Photo Enhancement</h3>
-            <div class="flex gap-2">
-                <button
-                    on:click={viewImages}
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm"
-                >
-                    View 2D images
-                </button>
-                <button
-                    on:click={downloadImages}
-                    class="bg-black text-white px-4 py-2 rounded text-sm flex items-center"
-                >
+                <div class="deliverable-card">
+            <h3>2D Photo Enhancement</h3>
+                    <div class="action-buttons">
+                        <button
+                            class="action-btn preview-btn"
+                            on:click={viewImages}>View 2D images</button
+                        >
+                        <button
+                            class="action-btn download-btn"
+                            on:click={downloadImages}
+                        >
                     Download
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 ml-1"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                     >
                         <path
-                            fill-rule="evenodd"
-                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                        />
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                ></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                 </button>
             </div>
         </div>
 
         <!-- Floorplans Section -->
-        <div
-            class="flex justify-between items-center py-4 border-b border-gray-200"
-        >
-            <h3 class="text-base font-medium">Floorplans</h3>
-            <div class="flex gap-2">
-                <button
-                    on:click={viewFloorplans}
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm"
-                >
-                    View floorplans
-                </button>
-                <button
-                    on:click={downloadFloorplans}
-                    class="bg-black text-white px-4 py-2 rounded text-sm flex items-center"
-                >
+                <div class="deliverable-card">
+            <h3>Floorplans</h3>
+                    <div class="action-buttons">
+                        <button
+                            class="action-btn preview-btn"
+                            on:click={viewFloorplans}>View floorplans</button
+                        >
+                        <button
+                            class="action-btn download-btn"
+                            on:click={downloadFloorplans}
+                        >
                     Download
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 ml-1"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                     >
                         <path
-                            fill-rule="evenodd"
-                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                        />
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                ></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                 </button>
             </div>
         </div>
 
         <!-- Inventory Report Section -->
-        <div
-            class="flex justify-between items-center py-4 border-b border-gray-200"
-        >
-            <h3 class="text-base font-medium">Inventory Report</h3>
-            <div class="flex gap-2">
-                <button
-                    on:click={viewReport}
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm"
-                >
-                    View report
-                </button>
-                <button
-                    on:click={downloadReport}
-                    class="bg-black text-white px-4 py-2 rounded text-sm flex items-center"
-                >
+                <div class="deliverable-card">
+            <h3>Inventory Report</h3>
+                    <div class="action-buttons">
+                        <button
+                            class="action-btn preview-btn"
+                            on:click={viewReport}>View report</button
+                        >
+                        <button
+                            class="action-btn download-btn"
+                            on:click={downloadReport}
+                        >
                     Download
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 ml-1"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
                     >
                         <path
-                            fill-rule="evenodd"
-                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                        />
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                ></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
                 </button>
             </div>
         </div>
-
-        <!-- Back button -->
-        <div class="mt-8">
-            <button on:click={goBack} class="flex items-center text-gray-700">
-                <svg
-                    class="w-4 h-4 mr-1"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    stroke="currentColor"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    ></path>
-                </svg>
-                Back to properties
-            </button>
+            </div>
         </div>
     {/if}
 </div>
 
 <style>
-    /* Add any additional styles here */
+    .property-details-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .breadcrumb {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .project-title h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: #212529;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .client-name {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .client-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background-color: #4263eb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .property-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .address-section {
+        background-color: white;
+        border-radius: 8px;
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #212529;
+    }
+
+    .section-header p {
+        font-size: 14px;
+        margin: 0;
+        color: #495057;
+    }
+
+    .view-tour-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .view-tour-btn:hover {
+        background-color: #212529;
+    }
+
+    .property-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .info-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-card h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0 0 16px 0;
+        color: #212529;
+    }
+
+    .info-card p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .status-value {
+        color: #28a745;
+    }
+
+    .deliverables-section {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .deliverable-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .deliverable-card h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0;
+        color: #212529;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .preview-btn {
+        background-color: white;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+
+    .preview-btn:hover {
+        background-color: #f8f9fa;
+    }
+
+    .download-btn,
+    .copy-btn {
+        background-color: #000;
+        color: white;
+        border: none;
+    }
+
+    .download-btn:hover,
+    .copy-btn:hover {
+        background-color: #212529;
+    }
+
+    .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-message {
+        color: #dc3545;
+        text-align: center;
+        padding: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .property-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .address-section,
+        .deliverable-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .action-buttons {
+            width: 100%;
+        }
+    }
 </style>

@@ -62,202 +62,397 @@
     }
 </script>
 
-<div
-    class="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4"
->
-    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
-        <!-- Logo -->
-        <div class="flex items-center justify-center mb-8">
-            <div class="flex items-center">
-                <div class="mr-2">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-6 w-6 text-black"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"
-                        />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold uppercase">DIGIPROP</h1>
-                    <p class="text-xs text-gray-500">
-                        Digital Property Solutions
-                    </p>
-                </div>
-            </div>
+<div class="login-container">
+    <div class="login-form">
+        <div class="logo">
+            <img src="/digiprop-logo.svg" alt="DigiProp Logo" />
+            <span>Digiprop</span>
         </div>
 
-        <!-- Welcome text -->
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-medium mb-1">Welcome back</h2>
-            <p class="text-gray-600">Login to your account</p>
-        </div>
+        <h1>Welcome back</h1>
+        <p class="subtitle">Login to your account</p>
+
+        {#if error}
+            <div class="error-message">
+                {error}
+            </div>
+        {/if}
 
         <!-- Login form -->
-        <form on:submit|preventDefault={handleLogin} class="space-y-4">
-            {#if error}
-                <div class="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                    {error}
-                </div>
-            {/if}
-
+        <form on:submit|preventDefault={handleLogin}>
             <!-- Email input -->
-            <div>
+            <div class="form-group">
                 <input
+                    id="email"
                     type="email"
                     placeholder="Enter email"
                     bind:value={email}
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
+                    required
                 />
             </div>
 
             <!-- Password input -->
-            <div class="relative">
-                <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                    bind:value={password}
-                    class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-gray-400"
-                />
-                <button
-                    type="button"
-                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                    on:click={togglePasswordVisibility}
-                >
-                    {#if showPassword}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                fill-rule="evenodd"
-                                d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                                clip-rule="evenodd"
-                            />
-                            <path
-                                d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"
-                            />
-                        </svg>
-                    {:else}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                            <path
-                                fill-rule="evenodd"
-                                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                clip-rule="evenodd"
-                            />
-                        </svg>
-                    {/if}
-                </button>
+            <div class="form-group">
+                <div class="password-input-container">
+                    <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Password"
+                        bind:value={password}
+                        required
+                    />
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        on:click={togglePasswordVisibility}
+                    >
+                        {#if showPassword}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                                ></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        {:else}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                ></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        {/if}
+                    </button>
+                </div>
             </div>
 
             <!-- Forgot password link -->
-            <div class="flex justify-end">
+            <div class="forgot-password">
                 <button
                     type="button"
-                    class="text-sm text-gray-600 hover:text-gray-900"
+                    class="text-btn"
                     on:click={handleForgotPassword}
                 >
-                    Forgot Password?
+                    Forgot Password ?
                 </button>
             </div>
 
             <!-- Login button -->
-            <button
-                type="submit"
-                class="w-full bg-black text-white p-3 rounded font-medium hover:bg-gray-900 transition-colors"
-                disabled={loading}
-            >
+            <button type="submit" class="primary-btn" disabled={loading}>
                 {#if loading}
-                    <span class="inline-block animate-spin mr-2">⟳</span>
+                    <span class="loading-icon">⟳</span>
                 {/if}
                 Log In
             </button>
         </form>
 
         <!-- OR divider -->
-        <div class="flex items-center my-6">
-            <div class="flex-grow border-t border-gray-200"></div>
-            <div class="px-4 text-sm text-gray-500">OR</div>
-            <div class="flex-grow border-t border-gray-200"></div>
+        <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">OR</div>
+            <div class="divider-line"></div>
         </div>
 
         <!-- Social login buttons -->
-        <div class="flex justify-center space-x-4">
+        <div class="social-login">
             <button
-                class="p-2 border border-gray-300 rounded-full hover:bg-gray-50"
+                class="social-btn google-btn"
                 on:click={() => handleSocialLogin("Google")}
+                aria-label="Log in with Google"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
+                    width="24"
+                    height="24"
                     viewBox="0 0 24 24"
+                    fill="none"
                 >
                     <path
-                        d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
                         fill="#4285F4"
+                        d="M21.8,10.4h-9.8v3.9h5.7c-0.3,2.8-2.6,4.3-5.7,4.3c-3.4,0-6.3-2.8-6.3-6.3c0-3.5,2.9-6.3,6.3-6.3 c1.5,0,3,0.5,4.1,1.6l2.9-2.9C17.3,2.9,14.6,2,11.8,2C6.4,2,2,6.5,2,12c0,5.5,4.4,10,9.8,10c5.1,0,9.4-3.5,9.4-9.5 C21.2,11.7,21.1,11,21.8,10.4z"
                     />
                 </svg>
             </button>
             <button
-                class="p-2 border border-gray-300 rounded-full hover:bg-gray-50"
+                class="social-btn facebook-btn"
                 on:click={() => handleSocialLogin("Facebook")}
+                aria-label="Log in with Facebook"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
+                    width="24"
+                    height="24"
                     viewBox="0 0 24 24"
+                    fill="none"
                 >
                     <path
-                        d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"
                         fill="#1877F2"
+                        d="M24,12c0-6.6-5.4-12-12-12S0,5.4,0,12c0,6,4.4,10.9,10.1,11.8v-8.4H7.1v-3.5h3v-2.6c0-3,1.8-4.6,4.5-4.6 c1.3,0,2.7,0.2,2.7,0.2v3h-1.5c-1.5,0-2,0.9-2,1.9v2.1h3.3l-0.5,3.5h-2.8v8.4C19.6,22.9,24,17.9,24,12z"
                     />
                 </svg>
             </button>
             <button
-                class="p-2 border border-gray-300 rounded-full hover:bg-gray-50"
+                class="social-btn apple-btn"
                 on:click={() => handleSocialLogin("Apple")}
+                aria-label="Log in with Apple"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-6"
+                    width="24"
+                    height="24"
                     viewBox="0 0 24 24"
+                    fill="none"
                 >
                     <path
-                        d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
-                        fill="#000"
+                        fill="#000000"
+                        d="M16.7,22.1c-0.9,0.9-1.9,0.8-2.8,0.3c-1-0.5-1.9-0.5-2.9,0c-1.3,0.6-2,0.4-2.8-0.3C3.6,17.5,4.2,9.4,9.2,9.1 c1.2,0.1,2.1,0.7,2.8,0.7c1.1-0.2,2.1-0.8,3.2-0.8c1.4,0.1,2.4,0.7,3.1,1.6c-2.8,1.7-2.2,5.4,0.4,6.5C18.1,18.8,17.6,21,16.7,22.1z M12.8,9c-0.1-2,1.5-3.7,3.4-3.8C16.5,7.3,14.1,9,12.8,9z"
                     />
                 </svg>
             </button>
         </div>
 
         <!-- Register link -->
-        <div class="mt-8 text-center">
-            <span class="text-sm text-gray-600">Don't have an Account?</span>
-            <button
-                class="text-sm text-blue-600 font-medium ml-1 hover:text-blue-800"
-                on:click={goToRegister}
+        <div class="alt-action">
+            <span>Don't have an Account?</span>
+            <button class="text-btn" on:click={goToRegister}
+                >Create Account</button
             >
-                Create Account
-            </button>
         </div>
     </div>
 </div>
 
 <style>
-    /* Add any custom styles here */
-    button:disabled {
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+
+    .login-form {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 32px;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .logo img {
+        height: 32px;
+        margin-right: 8px;
+    }
+
+    .logo span {
+        font-weight: 700;
+        font-size: 18px;
+        color: #333;
+        letter-spacing: 0.5px;
+    }
+
+    h1 {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0 0 8px 0;
+    }
+
+    .subtitle {
+        color: #6c757d;
+        margin: 0 0 24px 0;
+        font-size: 14px;
+    }
+
+    .error-message {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        outline: none;
+    }
+
+    .password-input-container {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .password-toggle:hover {
+        color: #64748b;
+    }
+
+    .forgot-password {
+        text-align: right;
+        margin-bottom: 20px;
+    }
+
+    .text-btn {
+        background: none;
+        border: none;
+        color: #3b82f6;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .text-btn:hover {
+        text-decoration: underline;
+        color: #2563eb;
+    }
+
+    .primary-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .primary-btn:hover {
+        background-color: #333;
+    }
+
+    .primary-btn:disabled {
         opacity: 0.7;
         cursor: not-allowed;
+    }
+
+    .loading-icon {
+        display: inline-block;
+        margin-right: 8px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 24px 0;
+    }
+
+    .divider-line {
+        flex: 1;
+        height: 1px;
+        background-color: #e2e8f0;
+    }
+
+    .divider-text {
+        padding: 0 12px;
+        color: #94a3b8;
+        font-size: 14px;
+        text-transform: uppercase;
+        font-size: 12px;
+    }
+
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+    }
+
+    .social-btn svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+    }
+
+    .social-btn:hover {
+        background-color: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    .alt-action {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .alt-action span {
+        color: #64748b;
     }
 </style>
